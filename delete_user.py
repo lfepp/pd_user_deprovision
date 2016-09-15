@@ -214,6 +214,14 @@ class DeleteUser():
                 return True
         return False
 
+    def check_team_for_user(self, user_id, team_users):
+        """Check the users on a team for the deletion user"""
+
+        for user in team_users:
+            if user['id'] == user_id:
+                return True
+        return False
+
     def get_user_index(self, user_id, schedule_layer):
         """Get the index of a user on a schedule layer"""
 
