@@ -27,3 +27,63 @@
 
 import requests
 import json
+
+
+class PagerDutyREST():
+    """Class to handle all calls to the PagerDuty API"""
+
+    def __init__(self, access_token):
+        self.base_url = 'https://api.pagerduty.com'
+        self.headers = {
+            'Accept': 'application/vnd.pagerduty+json;version=2',
+            'Content-type': 'application/json',
+            'Authorization': 'Token token={token}'.format(token=access_token)
+        }
+
+    def get(self, endpoint, payload=None):
+        """Handle all GET requests"""
+
+        url = '{base_url}{endpoint}'.format(
+            base_url=self.base_url,
+            endpoint=endpoint
+        )
+        r = requests.get(url, params=payload, headers=self.headers)
+        if r.status_code == 200:
+            return r.json()
+        else:
+            raise Exception(
+                'There was an issue with your GET request:\nStatus code: {code}\
+                \nError: {error}'.format(code=r.status_code, error=r.text)
+            )
+
+    def put(self, endpoint, payload=None):
+        """Handle all PUT requests"""
+
+        url = '{base_url}{endpoint}'.format(
+            base_url=self.base_url,
+            endpoint=endpoint
+        )
+        r = requests.put(url, data=json.dumps(payload), headers=self.headers)
+        if r.status_code == 200:
+            return r.json()
+        else:
+            raise Exception(
+                'There was an issue with your PUT request:\nStatus code: {code}\
+                \nError: {error}'.format(code=r.status_code, error=r.text)
+            )
+
+    def delete(self, endpoint):
+        """Handle all DELETE requests"""
+
+        url = '{base_url}{endpoint}'.format(
+            base_url=self.base_url,
+            endpoint=endpoint
+        )
+        r = requests.delete(url, headers=self.headers)
+        if r.status_code == 204:
+            return r.status_code
+        else:
+            raise Exception(
+                'There was an issue with your DELETE request:\nStatus code: {code}\
+                \nError: {error}'.format(code=r.status_code, error=r.text)
+            )
