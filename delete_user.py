@@ -222,7 +222,7 @@ class DeleteUser():
                 return True
         return False
 
-    def get_user_index(self, user_id, schedule_layer):
+    def get_user_layer_index(self, user_id, schedule_layer):
         """Get the index of a user on a schedule layer"""
 
         for i, user in enumerate(schedule_layer['users']):
@@ -230,11 +230,59 @@ class DeleteUser():
                 return i
         return None
 
+    def get_user_target_indices(self, user_id, escalation_rules):
+        """Get the escalation rule indices and target indices with the user"""
+
+        output = []
+        for i, rule in enumerate(escalation_rules):
+            for j, target in enumerate(rule['targets']):
+                if target['id'] == user_id:
+                    output.append({'rule': i, 'target': j})
+        return output
+
     def remove_user_from_layer(self, index, schedule_layer):
         """Remove a user from a schedule layer"""
 
         del schedule_layer['users'][index]
         return schedule_layer
+
+    def remove_user_from_escalation_policy(self, indices, escalation_rules):
+        """Remove a user from an escalation policy"""
+
+        for index in indices:
+            del escalation_rules[index['rule']]['targets'][index['target']]
+        return escalation_rules
+
+    def remove_user_from_team(self, team_id, user_id):
+        """Remove a user from a team"""
+
+        r = self.pd_rest.delete(
+            '/teams/{team_id}/users/{user_id}'.format(
+                team_id=team_id,
+                user_id=user_id
+            )
+        )
+        return r
+
+    def update_schedule(self, schedule, schedule_layers):
+        """Updates the schedule to have the updated schedule_layers"""
+
+        schedule['schedule_layers'] = schedule_layers
+        r = self.pd_rest.put(
+            '/schedules/{id}'.format(id=schedule['id']),
+            {schedule}
+        )
+        return r
+
+    def update_escalation_policy(self, escalation_policy, escalation_rules):
+        """Updates the escalation policy to have the updated esclation_rules"""
+
+        escalation_policy['escalation_rules'] = escalation_rules
+        r = self.pd_rest.put(
+            '/escalation_policies/{id}'.format(id=escalation_policy['id']),
+            {escalation_policy}
+        )
+        return r
 
     def cache_schedule(self, schedule, cache):
         """Adds current schedule to the cache of affected schedules"""
@@ -245,6 +293,22 @@ class DeleteUser():
         })
         return cache
 
+    def cache_team(self, team, cache):
+        """Adds current team to the cache of affected teams"""
+
+        cache.append({
+            'id': team['id'],
+            'name': team['name']
+        })
+
+    def cache_escalation_policy(self, escalation_policy, cache):
+        """Adds current escalation policy to the cache of affected EPs"""
+
+        cache.append({
+            'id': escalation_policy['id'],
+            'name': escalation_policy['name']
+        })
+
     def delete_user(self, user_id):
         """Delete user from PagerDuty"""
 
@@ -254,6 +318,12 @@ class DeleteUser():
 
 def main(access_token, user_email):
     """Handle command-line logic to delete user"""
+
+    # Declare cache variables
+    schedule_cache = []
+    escalation_policy_cache = []
+    team_cache = []
+    # Get the user ID of the user to be deleted
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Delete a user')
