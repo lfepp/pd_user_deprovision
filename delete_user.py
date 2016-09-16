@@ -93,26 +93,23 @@ class PagerDutyREST():
 class DeleteUser():
     """Class to handle all user deletion logic"""
 
-    def __init__(self, user, access_token):
-        self.user = user
+    def __init__(self, access_token):
         self.pd_rest = PagerDutyREST(access_token)
 
     def get_user_id(self, email):
         """Get PagerDuty user ID from user email"""
 
-        payload = {
-            'query': email
-        }
-        r = self.pd_rest.get('/users?limit=100', payload)
+        r = self.pd_rest.get('/users', {'limit': 100, 'query': email})
         # Handle pagination if over 100 users
         if r['more']:
             offset = 100
             output = r['users']
             while r['more']:
-                r = self.pd_rest.get(
-                    '/users?limit=100&offset={offset}'.format(offset=offset),
-                    payload
-                )
+                r = self.pd_rest.get('/users', {
+                    'limit': 100,
+                    'offset': offset,
+                    'query': email
+                })
                 output.append(r['users'])
                 offset += 100
             r = {
@@ -323,7 +320,18 @@ def main(access_token, user_email):
     schedule_cache = []
     escalation_policy_cache = []
     team_cache = []
+    # Declare an instance of the DeleteUser class
+    delete_user = DeleteUser(access_token)
     # Get the user ID of the user to be deleted
+    user_id = delete_user.get_user_id(user_email)
+    # Get a list of all schedules
+    schedules = delete_user.list_schedules()
+    for sched in schedules:
+        # Get the specific schedule
+        schedule = delete_user.get_schedule(sched['id'])
+        # Check if user is in schedule
+        if delete_user.check_schedule_for_user(user_id, schedule):
+            # Loop through schedule layers
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Delete a user')
