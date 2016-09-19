@@ -89,6 +89,22 @@ class PagerDutyREST():
                 \nError: {error}'.format(code=r.status_code, error=r.text)
             )
 
+    def post(self, endpoint, payload):
+        """Handle all POST requests"""
+
+        url = '{base_url}{endpoint}'.format(
+            base_url=self.base_url,
+            endpoint=endpoint
+        )
+        r = requests.post(url, headers=self.headers, data=json.dumps(payload))
+        if r.status_code == 201:
+            return r.status_code
+        else:
+            raise Exception(
+                'There was an issue with your POST request:\nStatus code: {code}\
+                \nError: {error}'.format(code=r.status_code, error=r.text)
+            )
+
 
 class DeleteUser():
     """Class to handle all user deletion logic"""
@@ -271,6 +287,23 @@ class DeleteUser():
         )
         return r
 
+    def delete_schedule(self, schedule_id):
+        """Deletes the schedule"""
+
+        r = self.pd_rest.delete(
+            '/schedules/{id}'.format(id=schedule_id)
+        )
+        return r
+
+    def create_schedule(self, schedule):
+        """Creates the schedule"""
+
+        r = self.pd_rest.post(
+            '/schedules',
+            schedule
+        )
+        return r
+
     def update_escalation_policy(self, escalation_policy_id, payload):
         """Updates the escalation policy"""
 
@@ -338,15 +371,22 @@ def main(access_token, user_email):
             for i, layer in enumerate(schedule['schedule_layers']):
                 # Get index of user in layer
                 layer_index = delete_user.get_user_layer_index(user_id, layer)
-                if layer_index:
+                if layer_index is not None:
                     schedule['schedule_layers'][i] = (
                         delete_user.remove_user_from_layer(
                             layer_index,
                             layer
                         )
                     )
-            # Update the schedule
-            delete_user.update_schedule(schedule['id'], schedule)
+                    # Remove the layer if it was the only user
+                    if len(schedule['schedule_layers'][i]['users']) == 0:
+                        del schedule['schedule_layers'][i]
+            # TODO: If possible, update schedule instead of deleting
+            # Reverse the schdule layers
+            schedule['schedule_layers'] = schedule['schedule_layers'][::-1]
+            del schedule['users']
+            delete_user.delete_schedule(schedule['id'])
+            delete_user.create_schedule(schedule)
     # Get a list of all esclation policies
     escalation_policies = delete_user.list_user_escalation_policies(user_id)
     for i, ep in enumerate(escalation_policies):
