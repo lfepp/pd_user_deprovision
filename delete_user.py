@@ -201,7 +201,7 @@ class DeleteUser():
         """Get a single schedule"""
 
         r = self.pd_rest.get('/schedules/{id}'.format(id=schedule_id))
-        return r
+        return r['schedule']
 
     def check_schedule_for_user(self, user_id, schedule):
         """Check if a schedule contains a particular user"""
@@ -223,7 +223,8 @@ class DeleteUser():
         """Get the index of a user on a schedule layer"""
 
         for i, user in enumerate(schedule_layer['users']):
-            if user['id'] == user_id:
+            # TODO: Fix once endpoint is fixed
+            if user['user']['id'] == user_id:
                 return i
         return None
 
@@ -261,23 +262,21 @@ class DeleteUser():
         )
         return r
 
-    def update_schedule(self, schedule, schedule_layers):
-        """Updates the schedule to have the updated schedule_layers"""
+    def update_schedule(self, schedule_id, payload):
+        """Updates the schedule"""
 
-        schedule['schedule_layers'] = schedule_layers
         r = self.pd_rest.put(
-            '/schedules/{id}'.format(id=schedule['id']),
-            {schedule}
+            '/schedules/{id}'.format(id=schedule_id),
+            payload
         )
         return r
 
-    def update_escalation_policy(self, escalation_policy, escalation_rules):
-        """Updates the escalation policy to have the updated esclation_rules"""
+    def update_escalation_policy(self, escalation_policy_id, payload):
+        """Updates the escalation policy"""
 
-        escalation_policy['escalation_rules'] = escalation_rules
         r = self.pd_rest.put(
-            '/escalation_policies/{id}'.format(id=escalation_policy['id']),
-            {escalation_policy}
+            '/escalation_policies/{id}'.format(id=escalation_policy_id),
+            payload
         )
         return r
 
@@ -331,10 +330,64 @@ def main(access_token, user_email):
         schedule = delete_user.get_schedule(sched['id'])
         # Check if user is in schedule
         if delete_user.check_schedule_for_user(user_id, schedule):
-            # Loop through schedule layers
+            # Cache schedule
+            schedule_cache = delete_user.cache_schedule(
+                schedule,
+                schedule_cache
+            )
+            for i, layer in enumerate(schedule['schedule_layers']):
+                # Get index of user in layer
+                layer_index = delete_user.get_user_layer_index(user_id, layer)
+                if layer_index:
+                    schedule['schedule_layers'][i] = (
+                        delete_user.remove_user_from_layer(
+                            layer_index,
+                            layer
+                        )
+                    )
+            # Update the schedule
+            delete_user.update_schedule(schedule['id'], schedule)
+    # Get a list of all esclation policies
+    escalation_policies = delete_user.list_user_escalation_policies(user_id)
+    for i, ep in enumerate(escalation_policies):
+        # Cache escalation policy
+        escalation_policy_cache = delete_user.cache_escalation_policy(
+            ep,
+            escalation_policy_cache
+        )
+        ep_indices = delete_user.get_user_target_indices(
+            user_id,
+            ep['escalation_rules']
+        )
+        escalation_policies[i]['escalation_rules'] = (
+            delete_user.remove_user_from_escalation_policy(
+                ep_indices,
+                ep['escalation_rules']
+            )
+        )
+        delete_user.update_escalation_policy(ep['id'], escalation_policies[i])
+    # Get a list of all teams
+    teams = delete_user.list_teams()
+    for team in teams:
+        team_users = delete_user.list_users_on_team(team['id'])
+        if delete_user.check_team_for_user(user_id, team_users):
+            # Cache team
+            team_cache = delete_user.cache_team(team, team_cache)
+            delete_user.remove_user_from_team(team['id'], user_id)
+    # Delete user
+    delete_user.delete_user(user_id)
+    print "Schedules affected:"
+    print schedule_cache
+    print "Escalation policies affected:"
+    print escalation_policy_cache
+    print "Teams affected:"
+    print team_cache
+    print "User {email} has been Successfully removed!".format(
+        email=user_email
+    )
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Delete a user')
+    parser = argparse.ArgumentParser(description='Delete a PagerDuty user')
     parser.add_argument(
         '--access-token',
         help='PagerDuty v2 access token',
@@ -347,3 +400,5 @@ if __name__ == '__main__':
         dest='user_email',
         required=True
     )
+    args = parser.parse_args()
+    main(args.access_token, args.user_email)
