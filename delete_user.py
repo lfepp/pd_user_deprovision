@@ -472,7 +472,10 @@ def main(access_token, user_email, requester):
             schedule['schedule_layers'] = schedule['schedule_layers'][::-1]
             del schedule['users']
             # Remove the schedule from any escalation policies
-            if len(schedule['escalation_policies']) > 0:
+            if (
+                len(schedule['escalation_policies']) > 0 and
+                len(schedule['schedule_layers']) == 0
+            ):
                 for ep in schedule['escalation_policies']:
                     escalation_policy = delete_user.get_escalation_policy(
                         ep['id']
@@ -495,7 +498,6 @@ def main(access_token, user_email, requester):
                             del escalation_policy['escalation_rules'][i]
                     # Update the escalation policy if there are rules or delete the escalation policy  # NOQA
                     if len(escalation_policy['escalation_rules']) > 0:
-                        print escalation_policy
                         delete_user.update_escalation_policy(
                             escalation_policy['id'],
                             escalation_policy
@@ -510,11 +512,11 @@ def main(access_token, user_email, requester):
                             longer has any on-call engineers or schedules but \
                             is still attached to services in your account.\
                             ".format(name=escalation_policy['name'])
-            else:
+            elif len(schedule['schedule_layers']) == 0:
                 delete_user.delete_schedule(schedule['id'])
-            # Create a new schedule as long as there is still one layer
-            if len(schedule['schedule_layers']) != 0:
-                delete_user.create_schedule(schedule)
+                # Create a new schedule as long as there is still one layer
+                if len(schedule['schedule_layers']) != 0:
+                    delete_user.create_schedule(schedule)
     # Get a list of all teams
     teams = delete_user.list_teams()
     for team in teams:
@@ -522,6 +524,7 @@ def main(access_token, user_email, requester):
         if delete_user.check_team_for_user(user_id, team_users):
             # Cache team
             team_cache = delete_user.cache_team(team, team_cache)
+            print team['id'] + " - " + team['name']
             delete_user.remove_user_from_team(team['id'], user_id)
     # Delete user
     delete_user.delete_user(user_id)
