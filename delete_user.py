@@ -411,14 +411,15 @@ def main(access_token, user_email, requester):
             )
         )
         # Remove rules with no more targets
-        # FIXME: These rules are not being removed
-        for j, rule in enumerate(escalation_policies[i]['escalation_rules']):
-            if len(rule['targets']) == 0:
-                del escalation_policies[i]['escalation_rules'][j]
-                print escalation_policies[i]['escalation_rules']
+        escalation_policies[i]['escalation_rules'] = [
+            x for j, x in enumerate(escalation_policies[i]['escalation_rules'])
+            if not len(x['targets']) == 0
+        ]
+        # for j, rule in enumerate(escalation_policies[i]['escalation_rules']):
+        #     if len(rule['targets']) == 0:
+        #         del escalation_policies[i]['escalation_rules'][j]
         # Update the escalation policy if there are rules or delete the escalation policy  # NOQA
         if len(escalation_policies[i]['escalation_rules']) != 0:
-            print escalation_policies[i]
             delete_user.update_escalation_policy(
                 escalation_policies[i]['id'],
                 escalation_policies[i]
