@@ -315,9 +315,12 @@ class DeleteUser():
         )
         return r
 
-    def update_escalation_policy(self, escalation_policy_id, payload):
+    def update_escalation_policy(self, escalation_policy_id, ep):
         """Updates the escalation policy"""
 
+        payload = {
+            'escalation_policy': ep
+        }
         r = self.pd_rest.put(
             '/escalation_policies/{id}'.format(id=escalation_policy_id),
             payload
@@ -360,6 +363,7 @@ class DeleteUser():
             'id': team['id'],
             'name': team['name']
         })
+        return cache
 
     def cache_escalation_policy(self, escalation_policy, cache):
         """Adds current escalation policy to the cache of affected EPs"""
@@ -368,6 +372,7 @@ class DeleteUser():
             'id': escalation_policy['id'],
             'name': escalation_policy['name']
         })
+        return cache
 
     def delete_user(self, user_id):
         """Delete user from PagerDuty"""
@@ -405,15 +410,35 @@ def main(access_token, user_email, requester):
                 ep['escalation_rules']
             )
         )
-        # remove rules with no more targets
+        # Remove rules with no more targets
+        # FIXME: These rules are not being removed
         for j, rule in enumerate(escalation_policies[i]['escalation_rules']):
             if len(rule['targets']) == 0:
                 del escalation_policies[i]['escalation_rules'][j]
-        # TODO: Update the EP instead of deleting and creating a new one
-        delete_user.delete_escalation_policy(ep['id'])
-        # Create a new escalation policy as long as there is one rule
+                print escalation_policies[i]['escalation_rules']
+        # Update the escalation policy if there are rules or delete the escalation policy  # NOQA
         if len(escalation_policies[i]['escalation_rules']) != 0:
-            delete_user.create_escalation_policy(escalation_policies[i])
+            print escalation_policies[i]
+            delete_user.update_escalation_policy(
+                escalation_policies[i]['id'],
+                escalation_policies[i]
+            )
+        else:
+            try:
+                delete_user.delete_escalation_policy(
+                    ep['id']
+                )
+            except Exception:
+                print "Warning! The escalation policy {name} no longer has any \
+                on-call engineers or schedules but is still attached to \
+                services in your account.".format(
+                    name=escalation_policies[i]['name']
+                )
+        # TODO: Update the EP instead of deleting and creating a new one
+        # delete_user.delete_escalation_policy(ep['id'])
+        # # Create a new escalation policy as long as there is one rule
+        # if len(escalation_policies[i]['escalation_rules']) != 0:
+        #     delete_user.create_escalation_policy(escalation_policies[i])
     # Get a list of all schedules
     schedules = delete_user.list_schedules()
     for sched in schedules:
@@ -452,7 +477,7 @@ def main(access_token, user_email, requester):
                         ep['id']
                     )
                     ep_indices = delete_user.get_target_indices(
-                        escalation_policy['id'],
+                        schedule['id'],
                         escalation_policy['escalation_rules']
                     )
                     escalation_policy['escalation_rules'] = (
@@ -467,13 +492,23 @@ def main(access_token, user_email, requester):
                     ):
                         if len(rule['targets']) == 0:
                             del escalation_policy['escalation_rules'][i]
-                    # TODO: Update the EP instead of deleting and creating a new one  # NOQA
-                    delete_user.delete_escalation_policy(
-                        escalation_policy['id']
-                    )
-                    # Create a new escalation policy as long as there is one rule  # NOQA
-                    if len(escalation_policy['escalation_rules']) != 0:
-                        delete_user.create_escalation_policy(escalation_policy)
+                    # Update the escalation policy if there are rules or delete the escalation policy  # NOQA
+                    if len(escalation_policy['escalation_rules']) > 0:
+                        print escalation_policy
+                        delete_user.update_escalation_policy(
+                            escalation_policy['id'],
+                            escalation_policy
+                        )
+                    else:
+                        try:
+                            delete_user.delete_escalation_policy(
+                                escalation_policy['id']
+                            )
+                        except Exception:
+                            print "Warning! The escalation policy {name} no \
+                            longer has any on-call engineers or schedules but \
+                            is still attached to services in your account.\
+                            ".format(name=escalation_policy['name'])
             else:
                 delete_user.delete_schedule(schedule['id'])
             # Create a new schedule as long as there is still one layer
