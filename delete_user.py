@@ -33,12 +33,13 @@ import argparse
 class PagerDutyREST():
     """Class to handle all calls to the PagerDuty API"""
 
-    def __init__(self, access_token):
+    def __init__(self, access_token, requester):
         self.base_url = 'https://api.pagerduty.com'
         self.headers = {
             'Accept': 'application/vnd.pagerduty+json;version=2',
             'Content-type': 'application/json',
-            'Authorization': 'Token token={token}'.format(token=access_token)
+            'Authorization': 'Token token={token}'.format(token=access_token),
+            'From': requester
         }
 
     def get(self, endpoint, payload=None):
@@ -109,8 +110,8 @@ class PagerDutyREST():
 class DeleteUser():
     """Class to handle all user deletion logic"""
 
-    def __init__(self, access_token):
-        self.pd_rest = PagerDutyREST(access_token)
+    def __init__(self, access_token, requester):
+        self.pd_rest = PagerDutyREST(access_token, requester)
 
     def get_user_id(self, email):
         """Get PagerDuty user ID from user email"""
@@ -219,6 +220,14 @@ class DeleteUser():
         r = self.pd_rest.get('/schedules/{id}'.format(id=schedule_id))
         return r['schedule']
 
+    def get_escalation_policy(self, escalation_policy_id):
+        """Get a single escalation policy"""
+
+        r = self.pd_rest.get(
+            '/escalation_policies/{id}'.format(id=escalation_policy_id)
+        )
+        return r['escalation_policy']
+
     def check_schedule_for_user(self, user_id, schedule):
         """Check if a schedule contains a particular user"""
 
@@ -244,13 +253,15 @@ class DeleteUser():
                 return i
         return None
 
-    def get_user_target_indices(self, user_id, escalation_rules):
-        """Get the escalation rule indices and target indices with the user"""
+    def get_target_indices(self, id, escalation_rules):
+        """Get the escalation rule indices and target indices for the user or
+        schedule
+        """
 
         output = []
         for i, rule in enumerate(escalation_rules):
             for j, target in enumerate(rule['targets']):
-                if target['id'] == user_id:
+                if target['id'] == id:
                     output.append({'rule': i, 'target': j})
         return output
 
@@ -260,8 +271,8 @@ class DeleteUser():
         del schedule_layer['users'][index]
         return schedule_layer
 
-    def remove_user_from_escalation_policy(self, indices, escalation_rules):
-        """Remove a user from an escalation policy"""
+    def remove_from_escalation_policy(self, indices, escalation_rules):
+        """Remove a user or schedule from an escalation policy"""
 
         for index in indices:
             del escalation_rules[index['rule']]['targets'][index['target']]
@@ -313,6 +324,26 @@ class DeleteUser():
         )
         return r
 
+    def delete_escalation_policy(self, escalation_policy_id):
+        """Deletes the escalation policy"""
+
+        r = self.pd_rest.delete(
+            '/escalation_policies/{id}'.format(id=escalation_policy_id)
+        )
+        return r
+
+    def create_escalation_policy(self, escalation_policy):
+        """Creates the escalation policy"""
+
+        payload = {
+            'escalation_policy': escalation_policy
+        }
+        r = self.pd_rest.post(
+            '/escalation_policies',
+            payload
+        )
+        return r
+
     def cache_schedule(self, schedule, cache):
         """Adds current schedule to the cache of affected schedules"""
 
@@ -345,7 +376,7 @@ class DeleteUser():
         return r
 
 
-def main(access_token, user_email):
+def main(access_token, user_email, requester):
     """Handle command-line logic to delete user"""
 
     # Declare cache variables
@@ -353,9 +384,36 @@ def main(access_token, user_email):
     escalation_policy_cache = []
     team_cache = []
     # Declare an instance of the DeleteUser class
-    delete_user = DeleteUser(access_token)
+    delete_user = DeleteUser(access_token, requester)
     # Get the user ID of the user to be deleted
     user_id = delete_user.get_user_id(user_email)
+    # Get a list of all esclation policies
+    escalation_policies = delete_user.list_user_escalation_policies(user_id)
+    for i, ep in enumerate(escalation_policies):
+        # Cache escalation policy
+        escalation_policy_cache = delete_user.cache_escalation_policy(
+            ep,
+            escalation_policy_cache
+        )
+        ep_indices = delete_user.get_target_indices(
+            user_id,
+            ep['escalation_rules']
+        )
+        escalation_policies[i]['escalation_rules'] = (
+            delete_user.remove_from_escalation_policy(
+                ep_indices,
+                ep['escalation_rules']
+            )
+        )
+        # remove rules with no more targets
+        for j, rule in enumerate(escalation_policies[i]['escalation_rules']):
+            if len(rule['targets']) == 0:
+                del escalation_policies[i]['escalation_rules'][j]
+        # TODO: Update the EP instead of deleting and creating a new one
+        delete_user.delete_escalation_policy(ep['id'])
+        # Create a new escalation policy as long as there is one rule
+        if len(escalation_policies[i]['escalation_rules']) != 0:
+            delete_user.create_escalation_policy(escalation_policies[i])
     # Get a list of all schedules
     schedules = delete_user.list_schedules()
     for sched in schedules:
@@ -378,34 +436,49 @@ def main(access_token, user_email):
                             layer
                         )
                     )
-                    # Remove the layer if it was the only user
-                    if len(schedule['schedule_layers'][i]['users']) == 0:
-                        del schedule['schedule_layers'][i]
+            # Remove all layers where that was the only user
+            schedule['schedule_layers'] = [
+                x for i, x in enumerate(schedule['schedule_layers'])
+                if not len(schedule['schedule_layers'][i]['users']) == 0
+            ]
             # TODO: If possible, update schedule instead of deleting
             # Reverse the schdule layers
             schedule['schedule_layers'] = schedule['schedule_layers'][::-1]
             del schedule['users']
-            delete_user.delete_schedule(schedule['id'])
-            delete_user.create_schedule(schedule)
-    # Get a list of all esclation policies
-    escalation_policies = delete_user.list_user_escalation_policies(user_id)
-    for i, ep in enumerate(escalation_policies):
-        # Cache escalation policy
-        escalation_policy_cache = delete_user.cache_escalation_policy(
-            ep,
-            escalation_policy_cache
-        )
-        ep_indices = delete_user.get_user_target_indices(
-            user_id,
-            ep['escalation_rules']
-        )
-        escalation_policies[i]['escalation_rules'] = (
-            delete_user.remove_user_from_escalation_policy(
-                ep_indices,
-                ep['escalation_rules']
-            )
-        )
-        delete_user.update_escalation_policy(ep['id'], escalation_policies[i])
+            # Remove the schedule from any escalation policies
+            if len(schedule['escalation_policies']) > 0:
+                for ep in schedule['escalation_policies']:
+                    escalation_policy = delete_user.get_escalation_policy(
+                        ep['id']
+                    )
+                    ep_indices = delete_user.get_target_indices(
+                        escalation_policy['id'],
+                        escalation_policy['escalation_rules']
+                    )
+                    escalation_policy['escalation_rules'] = (
+                        delete_user.remove_from_escalation_policy(
+                            ep_indices,
+                            escalation_policy['escalation_rules']
+                        )
+                    )
+                    # Remove rules with no targets
+                    for i, rule in enumerate(
+                        escalation_policy['escalation_rules']
+                    ):
+                        if len(rule['targets']) == 0:
+                            del escalation_policy['escalation_rules'][i]
+                    # TODO: Update the EP instead of deleting and creating a new one  # NOQA
+                    delete_user.delete_escalation_policy(
+                        escalation_policy['id']
+                    )
+                    # Create a new escalation policy as long as there is one rule  # NOQA
+                    if len(escalation_policy['escalation_rules']) != 0:
+                        delete_user.create_escalation_policy(escalation_policy)
+            else:
+                delete_user.delete_schedule(schedule['id'])
+            # Create a new schedule as long as there is still one layer
+            if len(schedule['schedule_layers']) != 0:
+                delete_user.create_schedule(schedule)
     # Get a list of all teams
     teams = delete_user.list_teams()
     for team in teams:
@@ -440,5 +513,11 @@ if __name__ == '__main__':
         dest='user_email',
         required=True
     )
+    parser.add_argument(
+        '--requester-email',
+        help='Email address of user requesting the deletion',
+        dest='requester',
+        required=True
+    )
     args = parser.parse_args()
-    main(args.access_token, args.user_email)
+    main(args.access_token, args.user_email, args.requester)
