@@ -28,6 +28,7 @@
 import requests
 import json
 import argparse
+from datetime import datetime
 
 
 class PagerDutyREST():
@@ -289,9 +290,12 @@ class DeleteUser():
         )
         return r
 
-    def update_schedule(self, schedule_id, payload):
+    def update_schedule(self, schedule_id, schedule):
         """Updates the schedule"""
 
+        payload = {
+            'schedule': schedule
+        }
         r = self.pd_rest.put(
             '/schedules/{id}'.format(id=schedule_id),
             payload
@@ -435,11 +439,6 @@ def main(access_token, user_email, requester):
                 services in your account.".format(
                     name=escalation_policies[i]['name']
                 )
-        # TODO: Update the EP instead of deleting and creating a new one
-        # delete_user.delete_escalation_policy(ep['id'])
-        # # Create a new escalation policy as long as there is one rule
-        # if len(escalation_policies[i]['escalation_rules']) != 0:
-        #     delete_user.create_escalation_policy(escalation_policies[i])
     # Get a list of all schedules
     schedules = delete_user.list_schedules()
     for sched in schedules:
@@ -455,27 +454,32 @@ def main(access_token, user_email, requester):
             for i, layer in enumerate(schedule['schedule_layers']):
                 # Get index of user in layer
                 layer_index = delete_user.get_user_layer_index(user_id, layer)
-                if layer_index is not None:
+                # If this is the only user on the layer, end the layer now
+                if layer_index == 0 and len(layer['users']) == 1:
+                    schedule['schedule_layers'][i]['end'] = (
+                        datetime.now().isoformat()
+                    )
+                elif layer_index is not None:
                     schedule['schedule_layers'][i] = (
                         delete_user.remove_user_from_layer(
                             layer_index,
                             layer
                         )
                     )
-            # Remove all layers where that was the only user
+            # # Remove all layers where that was the only user
             schedule['schedule_layers'] = [
                 x for i, x in enumerate(schedule['schedule_layers'])
                 if not len(schedule['schedule_layers'][i]['users']) == 0
             ]
-            # TODO: If possible, update schedule instead of deleting
             # Reverse the schdule layers
             schedule['schedule_layers'] = schedule['schedule_layers'][::-1]
             del schedule['users']
-            # Remove the schedule from any escalation policies
-            if (
-                len(schedule['escalation_policies']) > 0 and
-                len(schedule['schedule_layers']) == 0
-            ):
+            if len(schedule['schedule_layers']) > 0:
+                if schedule['id'] == 'PW73MZF':
+                    print json.dumps(schedule)
+                delete_user.update_schedule(schedule['id'], schedule)
+            # If deleting, remove the schedule from any escalation policies
+            elif len(schedule['escalation_policies']) > 0:
                 for ep in schedule['escalation_policies']:
                     escalation_policy = delete_user.get_escalation_policy(
                         ep['id']
@@ -512,7 +516,7 @@ def main(access_token, user_email, requester):
                             longer has any on-call engineers or schedules but \
                             is still attached to services in your account.\
                             ".format(name=escalation_policy['name'])
-            elif len(schedule['schedule_layers']) == 0:
+            else:
                 delete_user.delete_schedule(schedule['id'])
                 # Create a new schedule as long as there is still one layer
                 if len(schedule['schedule_layers']) != 0:
@@ -524,7 +528,6 @@ def main(access_token, user_email, requester):
         if delete_user.check_team_for_user(user_id, team_users):
             # Cache team
             team_cache = delete_user.cache_team(team, team_cache)
-            print team['id'] + " - " + team['name']
             delete_user.remove_user_from_team(team['id'], user_id)
     # Delete user
     delete_user.delete_user(user_id)
