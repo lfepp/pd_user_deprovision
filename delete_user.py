@@ -465,7 +465,6 @@ def main(access_token, user_email):
                             layer
                         )
                     )
-            # # Remove all layers where that was the only user
             schedule['schedule_layers'] = [
                 x for i, x in enumerate(schedule['schedule_layers'])
                 if not len(schedule['schedule_layers'][i]['users']) == 0
@@ -514,10 +513,8 @@ def main(access_token, user_email):
                             is still attached to services in your account.\
                             ".format(name=escalation_policy['name'])
             else:
+                # If no layers and no escalation policies, remove schedule
                 delete_user.delete_schedule(schedule['id'])
-                # Create a new schedule as long as there is still one layer
-                if len(schedule['schedule_layers']) != 0:
-                    delete_user.create_schedule(schedule)
     # Get a list of all teams
     teams = delete_user.list_teams()
     for team in teams:
