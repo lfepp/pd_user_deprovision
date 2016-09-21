@@ -34,13 +34,12 @@ from datetime import datetime
 class PagerDutyREST():
     """Class to handle all calls to the PagerDuty API"""
 
-    def __init__(self, access_token, requester):
+    def __init__(self, access_token):
         self.base_url = 'https://api.pagerduty.com'
         self.headers = {
             'Accept': 'application/vnd.pagerduty+json;version=2',
             'Content-type': 'application/json',
-            'Authorization': 'Token token={token}'.format(token=access_token),
-            'From': requester
+            'Authorization': 'Token token={token}'.format(token=access_token)
         }
 
     def get(self, endpoint, payload=None):
@@ -111,8 +110,8 @@ class PagerDutyREST():
 class DeleteUser():
     """Class to handle all user deletion logic"""
 
-    def __init__(self, access_token, requester):
-        self.pd_rest = PagerDutyREST(access_token, requester)
+    def __init__(self, access_token):
+        self.pd_rest = PagerDutyREST(access_token)
 
     def get_user_id(self, email):
         """Get PagerDuty user ID from user email"""
@@ -385,7 +384,7 @@ class DeleteUser():
         return r
 
 
-def main(access_token, user_email, requester):
+def main(access_token, user_email):
     """Handle command-line logic to delete user"""
 
     # Declare cache variables
@@ -393,7 +392,7 @@ def main(access_token, user_email, requester):
     escalation_policy_cache = []
     team_cache = []
     # Declare an instance of the DeleteUser class
-    delete_user = DeleteUser(access_token, requester)
+    delete_user = DeleteUser(access_token)
     # Get the user ID of the user to be deleted
     user_id = delete_user.get_user_id(user_email)
     # Get a list of all esclation policies
@@ -475,8 +474,6 @@ def main(access_token, user_email, requester):
             schedule['schedule_layers'] = schedule['schedule_layers'][::-1]
             del schedule['users']
             if len(schedule['schedule_layers']) > 0:
-                if schedule['id'] == 'PW73MZF':
-                    print json.dumps(schedule)
                 delete_user.update_schedule(schedule['id'], schedule)
             # If deleting, remove the schedule from any escalation policies
             elif len(schedule['escalation_policies']) > 0:
@@ -555,11 +552,5 @@ if __name__ == '__main__':
         dest='user_email',
         required=True
     )
-    parser.add_argument(
-        '--requester-email',
-        help='Email address of user requesting the deletion',
-        dest='requester',
-        required=True
-    )
     args = parser.parse_args()
-    main(args.access_token, args.user_email, args.requester)
+    main(args.access_token, args.user_email)
