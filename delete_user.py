@@ -532,11 +532,11 @@ def main(access_token, user_email, requester):
     # Delete user
     delete_user.delete_user(user_id)
     print "Schedules affected:"
-    print schedule_cache
+    print json.dumps(schedule_cache)
     print "Escalation policies affected:"
-    print escalation_policy_cache
+    print json.dumps(escalation_policy_cache)
     print "Teams affected:"
-    print team_cache
+    print json.dumps(team_cache)
     print "User {email} has been Successfully removed!".format(
         email=user_email
     )
