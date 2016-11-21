@@ -29,7 +29,7 @@ import glob
 import unittest
 
 
-def test_suite(include_rest):
+def test_suite():
     suite = unittest.TestSuite()
     files = glob.glob('tests/test_*.py')
     for file in files:

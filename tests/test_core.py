@@ -28,6 +28,9 @@
 import unittest
 import os
 import json
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
+import delete_user  # NOQA
 
 expected_filename = os.path.join(
     os.path.dirname(__file__),
@@ -47,3 +50,22 @@ with open(input_filename) as input_file:
 
 with open(config_filname) as config_file:
     config = json.load(config_file)
+
+core = delete_user.DeleteUser(config['access_token'])
+
+
+class CoreLogicTests(unittest.TestCase):
+
+    def get_user_id(self):
+        expected_result = expected['get_user_id'][0]
+        actual_result = core.get_user_id(input['get_user_id'][0])
+        self.assertEqual(expected_result, actual_result)
+        expected_result = expected['get_user_id'][1]
+        actual_result = core.get_user_id(input['get_user_id'][1])
+        self.assertEqual(expected_result, actual_result)
+
+
+def suite():
+    suite = unittest.TestSuite()
+    suite.addTest(CoreLogicTests('get_user_id'))
+    return suite
