@@ -133,6 +133,20 @@ class CoreLogicTests(unittest.TestCase):
         )
         self.assertEqual(expected_result, actual_result)
 
+    def get_target_indices(self):
+        expected_result = expected['get_target_indices'][0]
+        actual_result = core.get_target_indices(
+            input['get_target_indices'][0]['id'],
+            input['get_target_indices'][0]['escalation_rules']
+        )
+        self.assertEqual(expected_result, actual_result)
+        expected_result = expected['get_target_indices'][1]
+        actual_result = core.get_target_indices(
+            input['get_target_indices'][1]['id'],
+            input['get_target_indices'][1]['escalation_rules']
+        )
+        self.assertEqual(expected_result, actual_result)
+
 
 def suite():
     suite = unittest.TestSuite()
@@ -144,4 +158,5 @@ def suite():
     suite.addTest(CoreLogicTests('check_schedule_for_user'))
     suite.addTest(CoreLogicTests('check_team_for_user'))
     suite.addTest(CoreLogicTests('get_user_layer_index'))
+    suite.addTest(CoreLogicTests('get_target_indices'))
     return suite

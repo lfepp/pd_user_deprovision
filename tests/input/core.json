@@ -185,5 +185,84 @@
         ]
       }
     }
+  ],
+  "get_target_indices": [
+    {
+      "id": "ABCDEF",
+      "escalation_rules": [
+        {
+          "id": "XXXXXX",
+          "targets": [
+            {
+              "id": "AAAAAA"
+            },
+            {
+              "id": "ABCDEF"
+            },
+            {
+              "id": "BBBBBB"
+            }
+          ]
+        },
+        {
+          "id": "YYYYYY",
+          "targets": [
+            {
+              "id": "CCCCCC"
+            },
+            {
+              "id": "DDDDDD"
+            }
+          ]
+        },
+        {
+          "id": "ZZZZZZ",
+          "targets": [
+            {
+              "id": "ABCDEF"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ABCDEF",
+      "escalation_rules": [
+        {
+          "id": "XXXXXX",
+          "targets": [
+            {
+              "id": "AAAAAA"
+            },
+            {
+              "id": "BBBBBB"
+            },
+            {
+              "id": "CCCCCC"
+            },
+            {
+              "id": "DDDDDD"
+            }
+          ]
+        },
+        {
+          "id": "YYYYYY",
+          "targets": [
+            {
+              "id": "EEEEEE"
+            },
+            {
+              "id": "FFFFFF"
+            },
+            {
+              "id": "ABCDEF"
+            },
+            {
+              "id": "GGGGGG"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }
