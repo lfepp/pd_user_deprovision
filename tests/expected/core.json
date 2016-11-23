@@ -564,5 +564,27 @@
         "target": 2
       }
     ]
+  ],
+  "remove_user_from_layer": [
+    {
+      "id": "XXXXXX",
+      "name": "Layer 1",
+      "users": [
+        {
+          "user": {
+            "id": "AAAAAA",
+            "type": "user",
+            "name": "Arya Stark"
+          }
+        },
+        {
+          "user": {
+            "id": "CCCCCC",
+            "type": "user",
+            "name": "Robb Stark"
+          }
+        }
+      ]
+    }
   ]
 }

@@ -147,6 +147,14 @@ class CoreLogicTests(unittest.TestCase):
         )
         self.assertEqual(expected_result, actual_result)
 
+    def remove_user_from_layer(self):
+        expected_result = expected['remove_user_from_layer'][0]
+        actual_result = core.remove_user_from_layer(
+            input['remove_user_from_layer'][0]['index'],
+            input['remove_user_from_layer'][0]['schedule_layer']
+        )
+        self.assertEqual(expected_result, actual_result)
+
 
 def suite():
     suite = unittest.TestSuite()
@@ -159,4 +167,5 @@ def suite():
     suite.addTest(CoreLogicTests('check_team_for_user'))
     suite.addTest(CoreLogicTests('get_user_layer_index'))
     suite.addTest(CoreLogicTests('get_target_indices'))
+    suite.addTest(CoreLogicTests('remove_user_from_layer'))
     return suite

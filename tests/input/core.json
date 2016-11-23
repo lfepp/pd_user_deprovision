@@ -264,5 +264,37 @@
         }
       ]
     }
+  ],
+  "remove_user_from_layer": [
+    {
+      "index": 1,
+      "schedule_layer": {
+        "id": "XXXXXX",
+        "name": "Layer 1",
+        "users": [
+          {
+            "user": {
+              "id": "AAAAAA",
+              "type": "user",
+              "name": "Arya Stark"
+            }
+          },
+          {
+            "user": {
+              "id": "BBBBBB",
+              "type": "user",
+              "name": "Sansa Stark"
+            }
+          },
+          {
+            "user": {
+              "id": "CCCCCC",
+              "type": "user",
+              "name": "Robb Stark"
+            }
+          }
+        ]
+      }
+    }
   ]
 }
