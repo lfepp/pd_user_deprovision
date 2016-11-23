@@ -538,5 +538,13 @@
   "check_schedule_for_user": [
     true,
     false
+  ],
+  "check_team_for_user": [
+    true,
+    false
+  ],
+  "get_user_layer_index": [
+    1,
+    null
   ]
 }

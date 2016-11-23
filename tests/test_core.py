@@ -105,6 +105,34 @@ class CoreLogicTests(unittest.TestCase):
         )
         self.assertEqual(expected_result, actual_result)
 
+    def check_team_for_user(self):
+        expected_result = expected['check_team_for_user'][0]
+        actual_result = core.check_team_for_user(
+            input['check_team_for_user'][0]['user_id'],
+            input['check_team_for_user'][0]['team_users']
+        )
+        self.assertEqual(expected_result, actual_result)
+        expected_result = expected['check_team_for_user'][1]
+        actual_result = core.check_team_for_user(
+            input['check_team_for_user'][1]['user_id'],
+            input['check_team_for_user'][1]['team_users']
+        )
+        self.assertEqual(expected_result, actual_result)
+
+    def get_user_layer_index(self):
+        expected_result = expected['get_user_layer_index'][0]
+        actual_result = core.get_user_layer_index(
+            input['get_user_layer_index'][0]['user_id'],
+            input['get_user_layer_index'][0]['schedule_layer']
+        )
+        self.assertEqual(expected_result, actual_result)
+        expected_result = expected['get_user_layer_index'][1]
+        actual_result = core.get_user_layer_index(
+            input['get_user_layer_index'][1]['user_id'],
+            input['get_user_layer_index'][1]['schedule_layer']
+        )
+        self.assertEqual(expected_result, actual_result)
+
 
 def suite():
     suite = unittest.TestSuite()
@@ -114,4 +142,6 @@ def suite():
     suite.addTest(CoreLogicTests('get_schedule'))
     suite.addTest(CoreLogicTests('get_escalation_policy'))
     suite.addTest(CoreLogicTests('check_schedule_for_user'))
+    suite.addTest(CoreLogicTests('check_team_for_user'))
+    suite.addTest(CoreLogicTests('get_user_layer_index'))
     return suite
