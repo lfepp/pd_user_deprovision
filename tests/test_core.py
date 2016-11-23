@@ -155,6 +155,14 @@ class CoreLogicTests(unittest.TestCase):
         )
         self.assertEqual(expected_result, actual_result)
 
+    def remove_from_escalation_policy(self):
+        expected_result = expected['remove_from_escalation_policy'][0]
+        actual_result = core.remove_from_escalation_policy(
+            input['remove_from_escalation_policy'][0]['indices'],
+            input['remove_from_escalation_policy'][0]['escalation_rules']
+        )
+        self.assertEqual(expected_result, actual_result)
+
 
 def suite():
     suite = unittest.TestSuite()
@@ -168,4 +176,5 @@ def suite():
     suite.addTest(CoreLogicTests('get_user_layer_index'))
     suite.addTest(CoreLogicTests('get_target_indices'))
     suite.addTest(CoreLogicTests('remove_user_from_layer'))
+    suite.addTest(CoreLogicTests('remove_from_escalation_policy'))
     return suite

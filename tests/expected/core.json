@@ -586,5 +586,54 @@
         }
       ]
     }
+  ],
+  "remove_from_escalation_policy": [
+    [
+      {
+        "id": "AAAAAA",
+        "targets": [
+          {
+            "id": "BBBBBB",
+            "type": "user",
+            "name": "Arya Stark"
+          }
+        ]
+      },
+      {
+        "id": "CCCCCC",
+        "targets": [
+          {
+            "id": "BBBBBB",
+            "type": "user",
+            "name": "Arya Stark"
+          }
+        ]
+      },
+      {
+        "id": "DDDDDD",
+        "targets": [
+          {
+            "id": "BBBBBB",
+            "type": "user",
+            "name": "Arya Stark"
+          },
+          {
+            "id": "EEEEEE",
+            "type": "user",
+            "name": "Sansa Stark"
+          },
+          {
+            "id": "FFFFFF",
+            "type": "schedule",
+            "name": "House Stark"
+          },
+          {
+            "id": "GGGGGG",
+            "type": "user",
+            "name": "Robb Stark"
+          }
+        ]
+      }
+    ]
   ]
 }
