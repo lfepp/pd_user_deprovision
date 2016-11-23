@@ -2,5 +2,12 @@
   "get_user_id": [
     "lucas@pagerduty.com",
     "abel.tuter@example.com"
+  ],
+  "list_users_on_team": [
+    "PU30AUS",
+    "PRNBCAY"
+  ],
+  "list_user_escalation_policies": [
+    "PMPOKBU"
   ]
 }

@@ -64,8 +64,25 @@ class CoreLogicTests(unittest.TestCase):
         actual_result = core.get_user_id(input['get_user_id'][1])
         self.assertEqual(expected_result, actual_result)
 
+    def list_users_on_team(self):
+        expected_result = expected['list_users_on_team'][0]
+        actual_result = core.list_users_on_team(input['list_users_on_team'][0])
+        self.assertEqual(expected_result, actual_result)
+        expected_result = expected['list_users_on_team'][1]
+        actual_result = core.list_users_on_team(input['list_users_on_team'][1])
+        self.assertEqual(expected_result, actual_result)
+
+    def list_user_escalation_policies(self):
+        expected_result = expected['list_user_escalation_policies'][0]
+        actual_result = core.list_user_escalation_policies(
+            input['list_user_escalation_policies'][0]
+        )
+        self.assertEqual(expected_result, actual_result)
+
 
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(CoreLogicTests('get_user_id'))
+    suite.addTest(CoreLogicTests('list_users_on_team'))
+    suite.addTest(CoreLogicTests('list_user_escalation_policies'))
     return suite
