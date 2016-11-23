@@ -438,5 +438,105 @@
         "privilege": null
       }
     ]
+  ],
+  "get_schedule": [
+    {
+      "id": "PVUNMZG",
+      "type": "schedule",
+      "summary": "Delete User Test Schedule",
+      "self": "https://api.pagerduty.com/schedules/PVUNMZG",
+      "html_url": "https://pdt-lucas.pagerduty.com/schedules/PVUNMZG",
+      "name": "Delete User Test Schedule",
+      "time_zone": "America/Los_Angeles",
+      "description": null,
+      "escalation_policies": [],
+      "users": [
+        {
+          "id": "PMPOKBU",
+          "type": "user_reference",
+          "summary": "Delete User Test User",
+          "self": "https://api.pagerduty.com/users/PMPOKBU",
+          "html_url": "https://pdt-lucas.pagerduty.com/users/PMPOKBU"
+        }
+      ],
+      "privilege": null,
+      "schedule_layers": [
+        {
+          "name": "Layer 1",
+          "rendered_schedule_entries": [],
+          "rendered_coverage_percentage": null,
+          "id": "PIBVIHP",
+          "start": "2016-11-21T13:19:52-08:00",
+          "end": null,
+          "rotation_virtual_start": "2016-11-21T13:00:00-08:00",
+          "rotation_turn_length_seconds": 604800,
+          "users": [
+            {
+              "user": {
+                "id": "PMPOKBU",
+                "type": "user_reference",
+                "summary": "Delete User Test User",
+                "self": "https://api.pagerduty.com/users/PMPOKBU",
+                "html_url": "https://pdt-lucas.pagerduty.com/users/PMPOKBU"
+              }
+            }
+          ],
+          "restrictions": []
+        }
+      ],
+      "overrides_subschedule": {
+        "name": "Overrides",
+        "rendered_schedule_entries": [],
+        "rendered_coverage_percentage": null
+      },
+      "final_schedule": {
+        "name": "Final Schedule",
+        "rendered_schedule_entries": [],
+        "rendered_coverage_percentage": null
+      },
+      "teams": []
+    }
+  ],
+  "get_escalation_policy": [
+    {
+      "id": "PUT4PSP",
+      "type": "escalation_policy",
+      "summary": "Delete User Test EP",
+      "self": "https://api.pagerduty.com/escalation_policies/PUT4PSP",
+      "html_url": "https://pdt-lucas.pagerduty.com/escalation_policies/PUT4PSP",
+      "name": "Delete User Test EP",
+      "escalation_rules": [
+        {
+          "id": "P2MLJ1X",
+          "escalation_delay_in_minutes": 30,
+          "targets": [
+            {
+              "id": "PMPOKBU",
+              "type": "user_reference",
+              "summary": "Delete User Test User",
+              "self": "https://api.pagerduty.com/users/PMPOKBU",
+              "html_url": "https://pdt-lucas.pagerduty.com/users/PMPOKBU"
+            }
+          ]
+        }
+      ],
+      "services": [],
+      "num_loops": 0,
+      "teams": [
+        {
+          "id": "PU30AUS",
+          "type": "team_reference",
+          "summary": "Delete User Test Team",
+          "self": "https://api.pagerduty.com/teams/PU30AUS",
+          "html_url": "https://pdt-lucas.pagerduty.com/teams/PU30AUS"
+        }
+      ],
+      "description": "",
+      "privilege": null
+    }
+  ],
+  "check_schedule_for_user": [
+    true,
+    false
   ]
 }

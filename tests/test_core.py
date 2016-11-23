@@ -79,10 +79,39 @@ class CoreLogicTests(unittest.TestCase):
         )
         self.assertEqual(expected_result, actual_result)
 
+    def get_schedule(self):
+        expected_result = expected['get_schedule'][0]
+        actual_result = core.get_schedule(input['get_schedule'][0])
+        self.assertEqual(expected_result, actual_result)
+
+    def get_escalation_policy(self):
+        expected_result = expected['get_escalation_policy'][0]
+        actual_result = core.get_escalation_policy(
+            input['get_escalation_policy'][0]
+        )
+        self.assertEqual(expected_result, actual_result)
+
+    def check_schedule_for_user(self):
+        expected_result = expected['check_schedule_for_user'][0]
+        actual_result = core.check_schedule_for_user(
+            input['check_schedule_for_user'][0]['user_id'],
+            input['check_schedule_for_user'][0]['schedule']
+        )
+        self.assertEqual(expected_result, actual_result)
+        expected_result = expected['check_schedule_for_user'][1]
+        actual_result = core.check_schedule_for_user(
+            input['check_schedule_for_user'][1]['user_id'],
+            input['check_schedule_for_user'][1]['schedule']
+        )
+        self.assertEqual(expected_result, actual_result)
+
 
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(CoreLogicTests('get_user_id'))
     suite.addTest(CoreLogicTests('list_users_on_team'))
     suite.addTest(CoreLogicTests('list_user_escalation_policies'))
+    suite.addTest(CoreLogicTests('get_schedule'))
+    suite.addTest(CoreLogicTests('get_escalation_policy'))
+    suite.addTest(CoreLogicTests('check_schedule_for_user'))
     return suite

@@ -9,5 +9,67 @@
   ],
   "list_user_escalation_policies": [
     "PMPOKBU"
+  ],
+  "get_schedule": [
+    "PVUNMZG"
+  ],
+  "get_escalation_policy": [
+    "PUT4PSP"
+  ],
+  "check_schedule_for_user": [
+    {
+      "user_id": "ABCDEF",
+      "schedule": {
+        "users": [
+          {
+            "id": "AAAAA",
+            "type": "user",
+            "name": "Arya Stark"
+          },
+          {
+            "id": "BBBBBB",
+            "type": "user",
+            "name": "Sansa Stark"
+          },
+          {
+            "id": "ABCDEF",
+            "type": "user",
+            "name": "Jon Snow"
+          },
+          {
+            "id": "CCCCCC",
+            "type": "user",
+            "name": "Robb Stark"
+          }
+        ]
+      }
+    },
+    {
+      "user_id": "ABCDEF",
+      "schedule": {
+        "users": [
+          {
+            "id": "AAAAA",
+            "type": "user",
+            "name": "Arya Stark"
+          },
+          {
+            "id": "BBBBBB",
+            "type": "user",
+            "name": "Sansa Stark"
+          },
+          {
+            "id": "CCCCCC",
+            "type": "user",
+            "name": "Jon Snow"
+          },
+          {
+            "id": "DDDDDD",
+            "type": "user",
+            "name": "Robb Stark"
+          }
+        ]
+      }
+    }
   ]
 }
