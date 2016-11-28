@@ -367,5 +367,24 @@
         }
       ]
     }
+  ],
+  "cache_schedule": [
+    {
+      "schedule": {
+        "id": "ABCDEF",
+        "name": "House Stark",
+        "type": "schedule"
+      },
+      "cache": [
+        {
+          "id": "AAAAAA",
+          "name": "House Lannister"
+        },
+        {
+          "id": "BBBBBB",
+          "name": "House Baratheon"
+        }
+      ]
+    }
   ]
 }

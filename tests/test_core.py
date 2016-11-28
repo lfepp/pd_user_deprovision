@@ -163,6 +163,14 @@ class CoreLogicTests(unittest.TestCase):
         )
         self.assertEqual(expected_result, actual_result)
 
+    def cache_schedule(self):
+        expected_result = expected['cache_schedule'][0]
+        actual_result = core.cache_schedule(
+            input['cache_schedule'][0]['schedule'],
+            input['cache_schedule'][0]['cache']
+        )
+        self.assertEqual(expected_result, actual_result)
+
 
 def suite():
     suite = unittest.TestSuite()
@@ -177,4 +185,5 @@ def suite():
     suite.addTest(CoreLogicTests('get_target_indices'))
     suite.addTest(CoreLogicTests('remove_user_from_layer'))
     suite.addTest(CoreLogicTests('remove_from_escalation_policy'))
+    suite.addTest(CoreLogicTests('cache_schedule'))
     return suite
