@@ -171,6 +171,14 @@ class CoreLogicTests(unittest.TestCase):
         )
         self.assertEqual(expected_result, actual_result)
 
+    def cache_team(self):
+        expected_result = expected['cache_team'][0]
+        actual_result = core.cache_team(
+            input['cache_team'][0]['team'],
+            input['cache_team'][0]['cache']
+        )
+        self.assertEqual(expected_result, actual_result)
+
 
 def suite():
     suite = unittest.TestSuite()
@@ -186,4 +194,5 @@ def suite():
     suite.addTest(CoreLogicTests('remove_user_from_layer'))
     suite.addTest(CoreLogicTests('remove_from_escalation_policy'))
     suite.addTest(CoreLogicTests('cache_schedule'))
+    suite.addTest(CoreLogicTests('cache_team'))
     return suite

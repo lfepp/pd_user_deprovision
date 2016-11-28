@@ -386,5 +386,24 @@
         }
       ]
     }
+  ],
+  "cache_team": [
+    {
+      "team": {
+        "id": "ABCDEF",
+        "name": "House Stark",
+        "type": "team"
+      },
+      "cache": [
+        {
+          "id": "AAAAAA",
+          "name": "House Lannister"
+        },
+        {
+          "id": "BBBBBB",
+          "name": "House Baratheon"
+        }
+      ]
+    }
   ]
 }
