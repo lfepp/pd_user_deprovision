@@ -1,0 +1,428 @@
+{
+  "get_user_id": [
+    "lucas@pagerduty.com",
+    "abel.tuter@example.com"
+  ],
+  "list_users_on_team": [
+    "PU30AUS",
+    "PRNBCAY"
+  ],
+  "list_user_escalation_policies": [
+    "PMPOKBU"
+  ],
+  "get_schedule": [
+    "PVUNMZG"
+  ],
+  "get_escalation_policy": [
+    "PUT4PSP"
+  ],
+  "check_schedule_for_user": [
+    {
+      "user_id": "ABCDEF",
+      "schedule": {
+        "users": [
+          {
+            "id": "AAAAA",
+            "type": "user",
+            "name": "Arya Stark"
+          },
+          {
+            "id": "BBBBBB",
+            "type": "user",
+            "name": "Sansa Stark"
+          },
+          {
+            "id": "ABCDEF",
+            "type": "user",
+            "name": "Jon Snow"
+          },
+          {
+            "id": "CCCCCC",
+            "type": "user",
+            "name": "Robb Stark"
+          }
+        ]
+      }
+    },
+    {
+      "user_id": "ABCDEF",
+      "schedule": {
+        "users": [
+          {
+            "id": "AAAAA",
+            "type": "user",
+            "name": "Arya Stark"
+          },
+          {
+            "id": "BBBBBB",
+            "type": "user",
+            "name": "Sansa Stark"
+          },
+          {
+            "id": "CCCCCC",
+            "type": "user",
+            "name": "Jon Snow"
+          },
+          {
+            "id": "DDDDDD",
+            "type": "user",
+            "name": "Robb Stark"
+          }
+        ]
+      }
+    }
+  ],
+  "check_team_for_user": [
+    {
+      "user_id": "ABCDEF",
+      "team_users": [
+        {
+          "id": "AAAAA",
+          "type": "user",
+          "name": "Arya Stark"
+        },
+        {
+          "id": "BBBBBB",
+          "type": "user",
+          "name": "Sansa Stark"
+        },
+        {
+          "id": "ABCDEF",
+          "type": "user",
+          "name": "Jon Snow"
+        },
+        {
+          "id": "CCCCCC",
+          "type": "user",
+          "name": "Robb Stark"
+        }
+      ]
+    },
+    {
+      "user_id": "ABCDEF",
+      "team_users": [
+        {
+          "id": "AAAAA",
+          "type": "user",
+          "name": "Arya Stark"
+        },
+        {
+          "id": "BBBBBB",
+          "type": "user",
+          "name": "Sansa Stark"
+        },
+        {
+          "id": "CCCCCC",
+          "type": "user",
+          "name": "Jon Snow"
+        },
+        {
+          "id": "DDDDDD",
+          "type": "user",
+          "name": "Robb Stark"
+        }
+      ]
+    }
+  ],
+  "get_user_layer_index": [
+    {
+      "user_id": "ABCDEF",
+      "schedule_layer": {
+        "id": "XXXXXX",
+        "name": "Layer 1",
+        "users": [
+          {
+            "user": {
+              "id": "AAAAAA",
+              "type": "user",
+              "name": "Arya Stark"
+            }
+          },
+          {
+            "user": {
+              "id": "ABCDEF",
+              "type": "user",
+              "name": "Jon Snow"
+            }
+          },
+          {
+            "user": {
+              "id": "BBBBBB",
+              "type": "user",
+              "name": "Sansa Stark"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "user_id": "ABCDEF",
+      "schedule_layer": {
+        "id": "XXXXXX",
+        "name": "Layer 1",
+        "users": [
+          {
+            "user": {
+              "id": "AAAAAA",
+              "type": "user",
+              "name": "Arya Stark"
+            }
+          },
+          {
+            "user": {
+              "id": "BBBBBB",
+              "type": "user",
+              "name": "Sansa Stark"
+            }
+          },
+          {
+            "user": {
+              "id": "CCCCCC",
+              "type": "user",
+              "name": "Robb Stark"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "get_target_indices": [
+    {
+      "id": "ABCDEF",
+      "escalation_rules": [
+        {
+          "id": "XXXXXX",
+          "targets": [
+            {
+              "id": "AAAAAA"
+            },
+            {
+              "id": "ABCDEF"
+            },
+            {
+              "id": "BBBBBB"
+            }
+          ]
+        },
+        {
+          "id": "YYYYYY",
+          "targets": [
+            {
+              "id": "CCCCCC"
+            },
+            {
+              "id": "DDDDDD"
+            }
+          ]
+        },
+        {
+          "id": "ZZZZZZ",
+          "targets": [
+            {
+              "id": "ABCDEF"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ABCDEF",
+      "escalation_rules": [
+        {
+          "id": "XXXXXX",
+          "targets": [
+            {
+              "id": "AAAAAA"
+            },
+            {
+              "id": "BBBBBB"
+            },
+            {
+              "id": "CCCCCC"
+            },
+            {
+              "id": "DDDDDD"
+            }
+          ]
+        },
+        {
+          "id": "YYYYYY",
+          "targets": [
+            {
+              "id": "EEEEEE"
+            },
+            {
+              "id": "FFFFFF"
+            },
+            {
+              "id": "ABCDEF"
+            },
+            {
+              "id": "GGGGGG"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "remove_user_from_layer": [
+    {
+      "index": 1,
+      "schedule_layer": {
+        "id": "XXXXXX",
+        "name": "Layer 1",
+        "users": [
+          {
+            "user": {
+              "id": "AAAAAA",
+              "type": "user",
+              "name": "Arya Stark"
+            }
+          },
+          {
+            "user": {
+              "id": "BBBBBB",
+              "type": "user",
+              "name": "Sansa Stark"
+            }
+          },
+          {
+            "user": {
+              "id": "CCCCCC",
+              "type": "user",
+              "name": "Robb Stark"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "remove_from_escalation_policy": [
+    {
+      "indices": [
+        {
+          "rule": 0,
+          "target": 1
+        },
+        {
+          "rule": 2,
+          "target": 3
+        }
+      ],
+      "escalation_rules": [
+        {
+          "id": "AAAAAA",
+          "targets": [
+            {
+              "id": "BBBBBB",
+              "type": "user",
+              "name": "Arya Stark"
+            },
+            {
+              "id": "ABCDEF",
+              "type": "user",
+              "name": "Jon Snow"
+            }
+          ]
+        },
+        {
+          "id": "CCCCCC",
+          "targets": [
+            {
+              "id": "BBBBBB",
+              "type": "user",
+              "name": "Arya Stark"
+            }
+          ]
+        },
+        {
+          "id": "DDDDDD",
+          "targets": [
+            {
+              "id": "BBBBBB",
+              "type": "user",
+              "name": "Arya Stark"
+            },
+            {
+              "id": "EEEEEE",
+              "type": "user",
+              "name": "Sansa Stark"
+            },
+            {
+              "id": "FFFFFF",
+              "type": "schedule",
+              "name": "House Stark"
+            },
+            {
+              "id": "ABCDEF",
+              "type": "user",
+              "name": "Jon Snow"
+            },
+            {
+              "id": "GGGGGG",
+              "type": "user",
+              "name": "Robb Stark"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "cache_schedule": [
+    {
+      "schedule": {
+        "id": "ABCDEF",
+        "name": "House Stark",
+        "type": "schedule"
+      },
+      "cache": [
+        {
+          "id": "AAAAAA",
+          "name": "House Lannister"
+        },
+        {
+          "id": "BBBBBB",
+          "name": "House Baratheon"
+        }
+      ]
+    }
+  ],
+  "cache_team": [
+    {
+      "team": {
+        "id": "ABCDEF",
+        "name": "House Stark",
+        "type": "team"
+      },
+      "cache": [
+        {
+          "id": "AAAAAA",
+          "name": "House Lannister"
+        },
+        {
+          "id": "BBBBBB",
+          "name": "House Baratheon"
+        }
+      ]
+    }
+  ],
+  "cache_escalation_policy": [
+    {
+      "escalation_policy": {
+        "id": "ABCDEF",
+        "name": "House Stark",
+        "type": "escalation_policy"
+      },
+      "cache": [
+        {
+          "id": "AAAAAA",
+          "name": "House Lannister"
+        },
+        {
+          "id": "BBBBBB",
+          "name": "House Baratheon"
+        }
+      ]
+    }
+  ]
+}
