@@ -405,5 +405,24 @@
         }
       ]
     }
+  ],
+  "cache_escalation_policy": [
+    {
+      "escalation_policy": {
+        "id": "ABCDEF",
+        "name": "House Stark",
+        "type": "escalation_policy"
+      },
+      "cache": [
+        {
+          "id": "AAAAAA",
+          "name": "House Lannister"
+        },
+        {
+          "id": "BBBBBB",
+          "name": "House Baratheon"
+        }
+      ]
+    }
   ]
 }
