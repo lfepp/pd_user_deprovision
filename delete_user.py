@@ -442,11 +442,11 @@ def main(access_token, user_email):
                     ep['id']
                 )
             except Exception:
-                print "Warning! The escalation policy {name} no longer has any \
+                logging.warning('The escalation policy {name} no longer has any \
                 on-call engineers or schedules but is still attached to \
-                services in your account.".format(
+                services in your account.'.format(
                     name=escalation_policies[i]['name']
-                )
+                ))
     logging.info('Finished removing from escalation policies')
     logging.debug('EP cache: \n{cache}'.format(cache=json.dumps(
         escalation_policy_cache
@@ -525,10 +525,10 @@ def main(access_token, user_email):
                                 escalation_policy['id']
                             )
                         except Exception:
-                            print "Warning! The escalation policy {name} no \
+                            logging.warning('The escalation policy {name} no \
                             longer has any on-call engineers or schedules but \
                             is still attached to services in your account.\
-                            ".format(name=escalation_policy['name'])
+                            '.format(name=escalation_policy['name']))
             else:
                 # If no layers and no escalation policies, remove schedule
                 delete_user.delete_schedule(schedule['id'])
