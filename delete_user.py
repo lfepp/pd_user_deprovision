@@ -29,6 +29,8 @@ import requests
 import json
 import argparse
 from datetime import datetime
+import logging
+import os
 
 
 class PagerDutyREST():
@@ -387,6 +389,13 @@ class DeleteUser():
 def main(access_token, user_email):
     """Handle command-line logic to delete user"""
 
+    # Initialize logging
+    if not os.path.isdir(os.path.join(os.getcwd(), '/logs')):
+        os.path.mkdir(os.path.join(os.getcwd(), '/logs'))
+    logging.basicConfig(filename='/logs/{timestamp}.log'.format(
+        timestamp=datetime.now().isoformat()
+    ), level=logging.WARNING)
+    logging.info('Start of main logic')
     # Declare cache variables
     schedule_cache = []
     escalation_policy_cache = []
@@ -395,8 +404,11 @@ def main(access_token, user_email):
     delete_user = DeleteUser(access_token)
     # Get the user ID of the user to be deleted
     user_id = delete_user.get_user_id(user_email)
+    logging.info('User ID: {id}'.format(id=user_id))
     # Get a list of all esclation policies
     escalation_policies = delete_user.list_user_escalation_policies(user_id)
+    logging.info('GOT escalation policies')
+    logging.debug('EPs: \n{eps}'.format(eps=json.dumps(escalation_policies)))
     for i, ep in enumerate(escalation_policies):
         # Cache escalation policy
         escalation_policy_cache = delete_user.cache_escalation_policy(
@@ -418,9 +430,6 @@ def main(access_token, user_email):
             x for j, x in enumerate(escalation_policies[i]['escalation_rules'])
             if not len(x['targets']) == 0
         ]
-        # for j, rule in enumerate(escalation_policies[i]['escalation_rules']):
-        #     if len(rule['targets']) == 0:
-        #         del escalation_policies[i]['escalation_rules'][j]
         # Update the escalation policy if there are rules or delete the escalation policy  # NOQA
         if len(escalation_policies[i]['escalation_rules']) != 0:
             delete_user.update_escalation_policy(
@@ -433,13 +442,21 @@ def main(access_token, user_email):
                     ep['id']
                 )
             except Exception:
-                print "Warning! The escalation policy {name} no longer has any \
+                logging.warning('The escalation policy {name} no longer has any \
                 on-call engineers or schedules but is still attached to \
-                services in your account.".format(
+                services in your account.'.format(
                     name=escalation_policies[i]['name']
-                )
+                ))
+    logging.info('Finished removing from escalation policies')
+    logging.debug('EP cache: \n{cache}'.format(cache=json.dumps(
+        escalation_policy_cache
+    )))
     # Get a list of all schedules
     schedules = delete_user.list_schedules()
+    logging.info('GOT schedules')
+    logging.debug('Schedules: \n{schedules}'.format(schedules=json.dumps(
+        schedules
+    )))
     for sched in schedules:
         # Get the specific schedule
         schedule = delete_user.get_schedule(sched['id'])
@@ -508,32 +525,51 @@ def main(access_token, user_email):
                                 escalation_policy['id']
                             )
                         except Exception:
-                            print "Warning! The escalation policy {name} no \
+                            logging.warning('The escalation policy {name} no \
                             longer has any on-call engineers or schedules but \
                             is still attached to services in your account.\
-                            ".format(name=escalation_policy['name'])
+                            '.format(name=escalation_policy['name']))
             else:
                 # If no layers and no escalation policies, remove schedule
                 delete_user.delete_schedule(schedule['id'])
+    logging.info('Finished removing from schedules')
+    logging.debug('Schedule cache: {cache}'.format(cache=json.dumps(
+        schedule_cache
+    )))
     # Get a list of all teams
     teams = delete_user.list_teams()
+    logging.info('GOT teams')
+    logging.debug('Teams: \n{teams}'.format(teams=json.dumps(teams)))
     for team in teams:
         team_users = delete_user.list_users_on_team(team['id'])
         if delete_user.check_team_for_user(user_id, team_users):
             # Cache team
             team_cache = delete_user.cache_team(team, team_cache)
             delete_user.remove_user_from_team(team['id'], user_id)
+    logging.info('Finished removing from teams')
+    logging.debug('Team cache: {cache}'.format(cache=json.dumps(team_cache)))
     # Delete user
     delete_user.delete_user(user_id)
-    print "Schedules affected:"
-    print json.dumps(schedule_cache)
-    print "Escalation policies affected:"
-    print json.dumps(escalation_policy_cache)
-    print "Teams affected:"
-    print json.dumps(team_cache)
-    print "User {email} has been Successfully removed!".format(
+    print 'Schedules affected:\n{cache}'.format(cache=json.dumps(
+        schedule_cache
+    ))
+    logging.info('Schedules affected:\n{cache}'.format(cache=json.dumps(
+        schedule_cache
+    )))
+    print 'Escalation policies affected:\n{cache}'.format(cache=json.dumps(
+        escalation_policy_cache
+    ))
+    logging.info('Escalation policies affected:\n{cache}'.format(
+        cache=json.dumps(escalation_policy_cache)
+    ))
+    print 'Teams affected:\n{cache}'.format(cache=json.dumps(team_cache))
+    logging.info('Teams affected:\n{cache}'.format(cache=json.dumps(
+        team_cache
+    )))
+    print 'User {email} has been Successfully removed!'.format(
         email=user_email
     )
+    logging.info('End of main logic')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Delete a PagerDuty user')
