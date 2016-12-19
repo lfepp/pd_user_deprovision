@@ -390,9 +390,9 @@ def main(access_token, user_email):
     """Handle command-line logic to delete user"""
 
     # Initialize logging
-    if not os.path.isdir(os.path.join(os.getcwd(), '/logs')):
-        os.path.mkdir(os.path.join(os.getcwd(), '/logs'))
-    logging.basicConfig(filename='/logs/{timestamp}.log'.format(
+    if not os.path.isdir(os.path.join(os.getcwd(), './logs')):
+        os.mkdir(os.path.join(os.getcwd(), './logs'))
+    logging.basicConfig(filename='./logs/{timestamp}.log'.format(
         timestamp=datetime.now().isoformat()
     ), level=logging.WARNING)
     logging.info('Start of main logic')
