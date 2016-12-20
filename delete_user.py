@@ -141,6 +141,16 @@ class DeleteUser():
             'Could not find user with email {email}'.format(email=email)
         )
 
+    def list_open_incidents(self, service_ids):
+        """Get any open incidents assigned to the user"""
+
+        r = self.pd_rest.get('/incidents', {
+            'total': True,
+            'statuses[]': ['triggered', 'acknowledged'],
+            'service_ids[]': service_ids
+        })
+        return r
+
     def list_schedules(self):
         """Outputs list of all schedules"""
 
@@ -409,6 +419,29 @@ def main(access_token, user_email):
     escalation_policies = delete_user.list_user_escalation_policies(user_id)
     logging.info('GOT escalation policies')
     logging.debug('EPs: \n{eps}'.format(eps=json.dumps(escalation_policies)))
+    # Check for open incidents user is currently in use for
+    service_ids = []
+    for ep in escalation_policies:
+        for service in ep['services']:
+            service_ids.append(service['id'])
+    incidents = delete_user.list_open_incidents(service_ids)
+    if incidents['total'] > 0:
+        incident_output = ""
+        for incident in incidents['incidents']:
+            incident_output = "{current}\n[#{number}]: {description}".format(
+                current=incident_output,
+                number=incident['incident_number'],
+                description=incident['description']
+            )
+        raise Exception(
+            ('There are currently {total} open incidents that this user is '
+             'in use for. Please resolve the following incidents and '
+             'try again:{incidents}'.format(
+                total=incidents['total'],
+                incidents=incident_output
+                )
+             )
+        )
     for i, ep in enumerate(escalation_policies):
         # Cache escalation policy
         escalation_policy_cache = delete_user.cache_escalation_policy(
