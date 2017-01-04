@@ -44,16 +44,36 @@ class PagerDutyREST():
             'Authorization': 'Token token={token}'.format(token=access_token)
         }
 
-    def get(self, endpoint, payload=None):
+    def get(self, endpoint, payload={}):
         """Handle all GET requests"""
 
         url = '{base_url}{endpoint}'.format(
             base_url=self.base_url,
             endpoint=endpoint
         )
+        payload['limit'] = 100
         r = requests.get(url, params=payload, headers=self.headers)
         if r.status_code == 200:
-            return r.json()
+            r = r.json()
+            # Handle pagination if over 100 resources returned
+            # Try for cases where getting a single resource
+            try:
+                if r['more']:
+                    resource = endpoint[1:]
+                    payload['offset'] = 100
+                    output = r
+                    while r['more']:
+                        r = requests.get(
+                            url,
+                            params=payload,
+                            headers=self.headers
+                        ).json()
+                        output[resource].append(r[resource])
+                        payload['offset'] += 100
+                    r = output
+                return r
+            except:
+                return r
         else:
             raise Exception(
                 'There was an issue with your GET request:\nStatus code: {code}\
@@ -118,22 +138,7 @@ class DeleteUser():
     def get_user_id(self, email):
         """Get PagerDuty user ID from user email"""
 
-        r = self.pd_rest.get('/users', {'limit': 100, 'query': email})
-        # Handle pagination if over 100 users
-        if r['more']:
-            offset = 100
-            output = r['users']
-            while r['more']:
-                r = self.pd_rest.get('/users', {
-                    'limit': 100,
-                    'offset': offset,
-                    'query': email
-                })
-                output.append(r['users'])
-                offset += 100
-            r = {
-                'users': output
-            }
+        r = self.pd_rest.get('/users', {'query': email})
         for user in r['users']:
             if user['email'] == email:
                 return user['id']
@@ -154,76 +159,25 @@ class DeleteUser():
     def list_schedules(self):
         """Outputs list of all schedules"""
 
-        r = self.pd_rest.get('/schedules', {'limit': 100})
-        # Handle pagination if over 100 schedules
-        if r['more']:
-            offset = 100
-            output = r['schedules']
-            while r['more']:
-                r = self.pd_rest.get(
-                    '/schedules', {'limit': 100, 'offset': offset}
-                )
-                output.append(r['schedules'])
-                offset += 100
-            r = {'schedules': output}
+        r = self.pd_rest.get('/schedules')
         return r['schedules']
 
     def list_teams(self):
         """Outputs list of all teams"""
 
-        r = self.pd_rest.get('/teams', {'limit': 100})
-        # Handle pagination if over 100 teams
-        if r['more']:
-            offset = 100
-            output = r['teams']
-            while r['more']:
-                r = self.pd_rest.get(
-                    '/teams', {'limit': 100, 'offset': offset}
-                )
-                output.append(r['teams'])
-                offset += 100
-            r = {'teams': output}
+        r = self.pd_rest.get('/teams')
         return r['teams']
 
     def list_users_on_team(self, team_id):
         """List all users on a particular team"""
 
-        r = self.pd_rest.get('/users', {'limit': 100, 'team_ids[]': team_id})
-        # Handle pagination if over 100 users
-        if r['more']:
-            offset = 100
-            output = r['users']
-            while r['more']:
-                r = self.pd_rest.get('/users', {
-                    'limit': 100,
-                    'offset': offset,
-                    'team_ids[]': team_id
-                })
-                output.append(r['users'])
-                offset += 100
-            r = {'users': output}
+        r = self.pd_rest.get('/users', {'team_ids[]': team_id})
         return r['users']
 
     def list_user_escalation_policies(self, user_id):
         """List all escalation policies user is on"""
 
-        r = self.pd_rest.get('/escalation_policies', {
-            'limit': 100,
-            'user_ids[]': user_id
-        })
-        # Handle pagination if over 100 escalation policies
-        if r['more']:
-            offset = 100
-            output = r['escalation_policies']
-            while r['more']:
-                r = self.pd_rest.get('/escalation_policies', {
-                    'limit': 100,
-                    'offset': offset,
-                    'user_ids[]': user_id
-                })
-                output.append(r['escalation_policies'])
-                offset += 100
-            r = {'escalation_policies': output}
+        r = self.pd_rest.get('/escalation_policies', {'user_ids[]': user_id})
         return r['escalation_policies']
 
     def get_schedule(self, schedule_id):
