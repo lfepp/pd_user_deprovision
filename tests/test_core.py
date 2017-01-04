@@ -30,7 +30,7 @@ import os
 import json
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
-import delete_user  # NOQA
+import user_deprovision  # NOQA
 
 expected_filename = os.path.join(
     os.path.dirname(__file__),
@@ -51,7 +51,7 @@ with open(input_filename) as input_file:
 with open(config_filname) as config_file:
     config = json.load(config_file)
 
-core = delete_user.DeleteUser(config['access_token'])
+core = user_deprovision.DeleteUser(config['access_token'])
 
 
 class CoreLogicTests(unittest.TestCase):
