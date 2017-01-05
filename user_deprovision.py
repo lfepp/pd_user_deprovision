@@ -56,7 +56,7 @@ class PagerDutyREST():
         if r.status_code == 200:
             r = r.json()
             # Handle pagination if over 100 resources returned
-            # Try for cases where getting a single resource
+            # Try/except for cases where getting a single resource
             try:
                 if r['more']:
                     resource = endpoint[1:]
@@ -87,9 +87,16 @@ class PagerDutyREST():
             base_url=self.base_url,
             endpoint=endpoint
         )
-        r = requests.put(url, data=json.dumps(payload), headers=self.headers)
-        if r.status_code == 200:
-            return r.json()
+        if payload:
+            r = requests.put(
+                url,
+                data=json.dumps(payload),
+                headers=self.headers
+            )
+        else:
+            r = requests.put(url, headers=self.headers)
+        if r.status_code == 200 or r.status_code == 204:
+            return r.status_code
         else:
             raise Exception(
                 'There was an issue with your PUT request:\nStatus code: {code}\
@@ -112,16 +119,19 @@ class PagerDutyREST():
                 \nError: {error}'.format(code=r.status_code, error=r.text)
             )
 
-    def post(self, endpoint, payload):
+    def post(self, endpoint, payload, from_header=None):
         """Handle all POST requests"""
 
         url = '{base_url}{endpoint}'.format(
             base_url=self.base_url,
             endpoint=endpoint
         )
-        r = requests.post(url, headers=self.headers, data=json.dumps(payload))
+        headers = self.headers
+        if from_header:
+            headers['From'] = from_header
+        r = requests.post(url, headers=headers, data=json.dumps(payload))
         if r.status_code == 201:
-            return r.status_code
+            return r.json()
         else:
             raise Exception(
                 'There was an issue with your POST request:\nStatus code: {code}\
