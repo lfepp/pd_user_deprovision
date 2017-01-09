@@ -36,7 +36,7 @@ config_filname = os.path.join(os.path.dirname(__file__), '../config.json')
 with open(config_filname) as config_file:
     config = json.load(config_file)
 
-pd_rest = user_deprovision.PagerDutyREST(config['access_token'])
+pd_rest = user_deprovision.PagerDutyREST(config['utils']['access_token'])
 
 
 def select_random(data, resource):
