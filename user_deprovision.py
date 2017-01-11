@@ -571,13 +571,13 @@ def main(access_token, user_email):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Delete a PagerDuty user')
     parser.add_argument(
-        '--access-token',
+        '--access-token', '-a',
         help='PagerDuty v2 access token',
         dest='access_token',
         required=True
     )
     parser.add_argument(
-        '--user-email',
+        '--user-email', '-u',
         help='Email address of user to be deleted',
         dest='user_email',
         required=True
