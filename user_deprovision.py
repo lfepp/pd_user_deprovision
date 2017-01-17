@@ -68,7 +68,8 @@ class PagerDutyREST():
                             params=payload,
                             headers=self.headers
                         ).json()
-                        output[resource].append(r[resource])
+                        for i in r[resource]:
+                            output[resource].append(i)
                         payload['offset'] += 100
                     r = output
                 return r
