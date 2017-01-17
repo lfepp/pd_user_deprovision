@@ -42,16 +42,25 @@ pd_rest = user_deprovision.PagerDutyREST(config['utils']['access_token'])
 def select_random(data, resource):
     """Select random resources from the passed data"""
 
+    print "=====================NEW RESOURCE: {0}====================".format(resource)
     total = data['total']
+    print "original total: {0}".format(total)
     count = int(random.random() * total)
+    if resource == 'teams':
+        print "TEAMS OMG OMG OMG WHATS THE DATA LENGTH???: {0}".format(len(data['teams']))
     if count == 0:
         count = 1
     output = []
     for i in xrange(count):
+        print "i: {0}".format(i)
+        print "count: {0}".format(count)
         resource_index = int(random.random() * total)
+        print "resource_index: {0}".format(resource_index)
         output.append(data[resource][resource_index])
         del data[resource][resource_index]
+        print "data len: {0}".format(len(data[resource]))
         total -= 1
+        print "total: {0}".format(total)
     return output
 
 
@@ -69,8 +78,8 @@ def main():
     # Select random schedules
     schedules = select_random(r, 'schedules')
     # Get all teams
-    # TODO: Figure out why param isn't working
-    r = pd_rest.get('/teams?total=true')
+    # FIXME: add total within params
+    r = pd_rest.get('/teams?total=true', {}, 'teams')
     # Select random teams
     teams = select_random(r, 'teams')
     # Add user

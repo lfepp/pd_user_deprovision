@@ -44,7 +44,7 @@ class PagerDutyREST():
             'Authorization': 'Token token={token}'.format(token=access_token)
         }
 
-    def get(self, endpoint, payload={}):
+    def get(self, endpoint, payload={}, resource=None):
         """Handle all GET requests"""
 
         url = '{base_url}{endpoint}'.format(
@@ -59,7 +59,9 @@ class PagerDutyREST():
             # Try/except for cases where getting a single resource
             try:
                 if r['more']:
-                    resource = endpoint[1:]
+                    # FIXME: Remove when teams can have total in params
+                    if not resource:
+                        resource = endpoint[1:]
                     payload['offset'] = 100
                     output = r
                     while r['more']:
@@ -68,7 +70,8 @@ class PagerDutyREST():
                             params=payload,
                             headers=self.headers
                         ).json()
-                        output[resource].append(r[resource])
+                        for i in r[resource]:
+                            output[resource].append(i)
                         payload['offset'] += 100
                     r = output
                 return r
