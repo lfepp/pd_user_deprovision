@@ -56,41 +56,6 @@ core = user_deprovision.DeleteUser(config['access_token'])
 
 class CoreLogicTests(unittest.TestCase):
 
-    def get_user_id(self):
-        expected_result = expected['get_user_id'][0]
-        actual_result = core.get_user_id(input['get_user_id'][0])
-        self.assertEqual(expected_result, actual_result)
-        expected_result = expected['get_user_id'][1]
-        actual_result = core.get_user_id(input['get_user_id'][1])
-        self.assertEqual(expected_result, actual_result)
-
-    def list_users_on_team(self):
-        expected_result = expected['list_users_on_team'][0]
-        actual_result = core.list_users_on_team(input['list_users_on_team'][0])
-        self.assertEqual(expected_result, actual_result)
-        expected_result = expected['list_users_on_team'][1]
-        actual_result = core.list_users_on_team(input['list_users_on_team'][1])
-        self.assertEqual(expected_result, actual_result)
-
-    def list_user_escalation_policies(self):
-        expected_result = expected['list_user_escalation_policies'][0]
-        actual_result = core.list_user_escalation_policies(
-            input['list_user_escalation_policies'][0]
-        )
-        self.assertEqual(expected_result, actual_result)
-
-    def get_schedule(self):
-        expected_result = expected['get_schedule'][0]
-        actual_result = core.get_schedule(input['get_schedule'][0])
-        self.assertEqual(expected_result, actual_result)
-
-    def get_escalation_policy(self):
-        expected_result = expected['get_escalation_policy'][0]
-        actual_result = core.get_escalation_policy(
-            input['get_escalation_policy'][0]
-        )
-        self.assertEqual(expected_result, actual_result)
-
     def check_schedule_for_user(self):
         expected_result = expected['check_schedule_for_user'][0]
         actual_result = core.check_schedule_for_user(
@@ -190,11 +155,6 @@ class CoreLogicTests(unittest.TestCase):
 
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(CoreLogicTests('get_user_id'))
-    suite.addTest(CoreLogicTests('list_users_on_team'))
-    suite.addTest(CoreLogicTests('list_user_escalation_policies'))
-    suite.addTest(CoreLogicTests('get_schedule'))
-    suite.addTest(CoreLogicTests('get_escalation_policy'))
     suite.addTest(CoreLogicTests('check_schedule_for_user'))
     suite.addTest(CoreLogicTests('check_team_for_user'))
     suite.addTest(CoreLogicTests('get_user_layer_index'))
