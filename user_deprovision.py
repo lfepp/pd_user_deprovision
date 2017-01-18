@@ -159,13 +159,13 @@ class DeleteUser():
             'Could not find user with email {email}'.format(email=email)
         )
 
-    def list_open_incidents(self, service_ids):
+    def list_open_incidents(self, user_id):
         """Get any open incidents assigned to the user"""
 
         r = self.pd_rest.get('/incidents', {
             'total': True,
             'statuses[]': ['triggered', 'acknowledged'],
-            'service_ids[]': service_ids
+            'user_ids[]': user_id
         })
         return r
 
@@ -387,11 +387,7 @@ def main(access_token, user_email):
     logging.info('GOT escalation policies')
     logging.debug('EPs: \n{eps}'.format(eps=json.dumps(escalation_policies)))
     # Check for open incidents user is currently in use for
-    service_ids = []
-    for ep in escalation_policies:
-        for service in ep['services']:
-            service_ids.append(service['id'])
-    incidents = delete_user.list_open_incidents(service_ids)
+    incidents = delete_user.list_open_incidents(user_id)
     if incidents['total'] > 0:
         incident_output = ""
         for incident in incidents['incidents']:
