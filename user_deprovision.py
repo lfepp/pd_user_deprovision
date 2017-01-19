@@ -383,11 +383,6 @@ def main(access_token, user_email):
     delete_user = DeleteUser(access_token)
     # Get the user ID of the user to be deleted
     user_id = delete_user.get_user_id(user_email)
-    logging.info('User ID: {id}'.format(id=user_id))
-    # Get a list of all esclation policies
-    escalation_policies = delete_user.list_user_escalation_policies(user_id)
-    logging.info('GOT escalation policies')
-    logging.debug('EPs: \n{eps}'.format(eps=json.dumps(escalation_policies)))
     # Check for open incidents user is currently in use for
     incidents = delete_user.list_open_incidents(user_id)
     if incidents['total'] > 0:
@@ -398,6 +393,15 @@ def main(access_token, user_email):
                 number=incident['incident_number'],
                 description=incident['description']
             )
+        logging.critical(
+            ('There are currently {total} open incidents that this user is '
+             'in use for. Please resolve the following incidents and '
+             'try again:{incidents}'.format(
+                total=incidents['total'],
+                incidents=incident_output
+                )
+             )
+        )
         raise Exception(
             ('There are currently {total} open incidents that this user is '
              'in use for. Please resolve the following incidents and '
@@ -407,6 +411,11 @@ def main(access_token, user_email):
                 )
              )
         )
+    logging.info('User ID: {id}'.format(id=user_id))
+    # Get a list of all esclation policies
+    escalation_policies = delete_user.list_user_escalation_policies(user_id)
+    logging.info('GOT escalation policies')
+    logging.debug('EPs: \n{eps}'.format(eps=json.dumps(escalation_policies)))
     for i, ep in enumerate(escalation_policies):
         # Cache escalation policy
         escalation_policy_cache = delete_user.cache_escalation_policy(
