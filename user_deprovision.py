@@ -300,6 +300,8 @@ class DeleteUser():
     def update_escalation_policy(self, escalation_policy_id, ep):
         """Updates the escalation policy"""
 
+        # Delete description in case it is null
+        del ep['description']
         payload = {
             'escalation_policy': ep
         }

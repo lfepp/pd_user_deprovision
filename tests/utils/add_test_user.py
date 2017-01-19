@@ -42,25 +42,19 @@ pd_rest = user_deprovision.PagerDutyREST(config['utils']['access_token'])
 def select_random(data, resource):
     """Select random resources from the passed data"""
 
-    print "=====================NEW RESOURCE: {0}====================".format(resource)
     total = data['total']
-    print "original total: {0}".format(total)
     count = int(random.random() * total)
-    if resource == 'teams':
-        print "TEAMS OMG OMG OMG WHATS THE DATA LENGTH???: {0}".format(len(data['teams']))
     if count == 0:
         count = 1
+    # Set a maximum to prevent this util from taking forever
+    elif count > 100:
+        count = 100
     output = []
     for i in xrange(count):
-        print "i: {0}".format(i)
-        print "count: {0}".format(count)
         resource_index = int(random.random() * total)
-        print "resource_index: {0}".format(resource_index)
         output.append(data[resource][resource_index])
         del data[resource][resource_index]
-        print "data len: {0}".format(len(data[resource]))
         total -= 1
-        print "total: {0}".format(total)
     return output
 
 
