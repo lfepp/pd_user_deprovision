@@ -383,6 +383,7 @@ def main(access_token, user_email):
     delete_user = DeleteUser(access_token)
     # Get the user ID of the user to be deleted
     user_id = delete_user.get_user_id(user_email)
+    logging.info('User ID: {id}'.format(id=user_id))
     # Check for open incidents user is currently in use for
     incidents = delete_user.list_open_incidents(user_id)
     if incidents['total'] > 0:
@@ -411,7 +412,6 @@ def main(access_token, user_email):
                 )
              )
         )
-    logging.info('User ID: {id}'.format(id=user_id))
     # Get a list of all esclation policies
     escalation_policies = delete_user.list_user_escalation_policies(user_id)
     logging.info('GOT escalation policies')
