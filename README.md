@@ -6,11 +6,13 @@ Python script to de-provision a user in PagerDuty including removing them from a
 
 This script is meant to be used as a command line tool with the following arguments:
 
-`./user_deprovision.py --access-token ENTER_PD_ACCESS_TOKEN --user-email user-to-delete@example.com`
+`./user_deprovision.py --access-token ENTER_PD_ACCESS_TOKEN --user-email user-to-delete@example.com --from-email user-requesting-deletion@example.com`
 
 **-a**, **--access-token**: A valid PagerDuty v2 REST API access token from your account
 
 **-u**, **--user-email**: The PagerDuty email address for the user you want to delete from your account
+
+**-f**, **--from-header**: The PagerDuty email address of the user that is requesting the deletion
 
 ## Author
 
