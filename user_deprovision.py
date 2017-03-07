@@ -83,13 +83,16 @@ class PagerDutyREST():
                 \nError: {error}'.format(code=r.status_code, error=r.text)
             )
 
-    def put(self, endpoint, payload=None):
+    def put(self, endpoint, payload=None, from_header=None):
         """Handle all PUT requests"""
 
         url = '{base_url}{endpoint}'.format(
             base_url=self.base_url,
             endpoint=endpoint
         )
+        headers = self.headers
+        if from_header:
+            headers['From'] = from_header
         if payload:
             r = requests.put(
                 url,
@@ -97,7 +100,7 @@ class PagerDutyREST():
                 headers=self.headers
             )
         else:
-            r = requests.put(url, headers=self.headers)
+            r = requests.put(url, headers=headers)
         if r.status_code == 200 or r.status_code == 204:
             return r.status_code
         else:
@@ -167,6 +170,28 @@ class DeleteUser():
             'statuses[]': ['triggered', 'acknowledged'],
             'user_ids[]': user_id
         })
+        return r
+
+    def get_incident_resolution_payload(self, incident_ids):
+        """Gets a payload to resolve all open incidents"""
+
+        output = {"incidents": []}
+        for incident_id in incident_ids:
+            output['incidents'].append({
+                'id': incident_id,
+                'type': 'incident_reference',
+                'status': 'resolved'
+            })
+        return output
+
+    def resolve_open_incidents(self, incidents, from_email):
+        """Resolves all incidents"""
+
+        r = self.pd_rest.put(
+            '/incidents',
+            incidents,
+            from_email
+        )
         return r
 
     def list_schedules(self):
@@ -365,7 +390,7 @@ class DeleteUser():
         return r
 
 
-def main(access_token, user_email):
+def main(access_token, user_email, from_email):
     """Handle command-line logic to delete user"""
 
     # Initialize logging
@@ -388,30 +413,53 @@ def main(access_token, user_email):
     incidents = delete_user.list_open_incidents(user_id)
     if incidents['total'] > 0:
         incident_output = ""
+        incident_ids = []
         for incident in incidents['incidents']:
             incident_output = "{current}\n[#{number}]: {description}".format(
                 current=incident_output,
                 number=incident['incident_number'],
                 description=incident['description']
             )
-        logging.critical(
-            ('There are currently {total} open incidents that this user is '
-             'in use for. Please resolve the following incidents and '
-             'try again:{incidents}'.format(
+            incident_ids.append(incident['id'])
+        # TODO: Refactor this into a function
+        response = raw_input(
+            'There are currently {total} open incidents that this user is in '
+            'use for:{incidents}\n'
+            'Do you want to auto-resolve the incidents below? (y/n): '.format(
                 total=incidents['total'],
                 incidents=incident_output
-                )
-             )
+            )
         )
-        raise Exception(
-            ('There are currently {total} open incidents that this user is '
-             'in use for. Please resolve the following incidents and '
-             'try again:{incidents}'.format(
-                total=incidents['total'],
-                incidents=incident_output
-                )
-             )
-        )
+        if response.lower() in ['n', 'no']:
+            logging.critical(
+                ('There are currently {total} open incidents that this user is'
+                 ' in use for. Please resolve the following incidents and '
+                 'try again:{incidents}'.format(
+                    total=incidents['total'],
+                    incidents=incident_output
+                    )
+                 )
+            )
+            raise Exception(
+                ('There are currently {total} open incidents that this user is'
+                 ' in use for. Please resolve the following incidents and '
+                 'try again:{incidents}'.format(
+                    total=incidents['total'],
+                    incidents=incident_output
+                    )
+                 )
+            )
+        elif response.lower() in ['y', 'yes']:
+            # TODO: Should prompt for from_email instead of throwing an error
+            if not from_email:
+                raise Exception('Must pass from_email to resolve incidents')
+            logging.info('Resolving all open incidents...')
+            payload = delete_user.get_incident_resolution_payload(incident_ids)
+            delete_user.resolve_open_incidents(payload, from_email)
+            logging.info('Successfully resolved all open incidents')
+        else:
+            logging.critical('Did not answer y or n')
+            raise Exception('Did not answer y or n')
     # Get a list of all esclation policies
     escalation_policies = delete_user.list_user_escalation_policies(user_id)
     logging.info('GOT escalation policies')
@@ -592,5 +640,10 @@ if __name__ == '__main__':
         dest='user_email',
         required=True
     )
+    parser.add_argument(
+        '--from-email', '-f',
+        help='Email address of the user requesting deletion',
+        dest='from_email'
+    )
     args = parser.parse_args()
-    main(args.access_token, args.user_email)
+    main(args.access_token, args.user_email, args.from_email)
