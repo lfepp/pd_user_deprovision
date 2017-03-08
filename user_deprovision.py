@@ -65,6 +65,7 @@ class PagerDutyREST():
                     payload['offset'] = 100
                     output = r
                     while r['more']:
+                        logging.info('GET pagination...')
                         r = requests.get(
                             url,
                             params=payload,
@@ -168,28 +169,37 @@ class DeleteUser():
         r = self.pd_rest.get('/incidents', {
             'total': True,
             'statuses[]': ['triggered', 'acknowledged'],
-            'user_ids[]': user_id
+            'user_ids[]': user_id,
+            # 'date_range': 'all',
+            # 'urgencies[]': 'suppressed',
+            # 'with_suppressed': True,
         })
         return r
 
-    def get_incident_resolution_payload(self, incident_ids):
-        """Gets a payload to resolve all open incidents"""
-
-        output = {"incidents": []}
-        for incident_id in incident_ids:
-            output['incidents'].append({
-                'id': incident_id,
-                'type': 'incident_reference',
-                'status': 'resolved'
-            })
-        return output
-
-    def resolve_open_incidents(self, incidents, from_email):
+    def resolve_incidents(self, incidents, from_email):
         """Resolves all incidents"""
 
+        for incident in incidents:
+            logging.info('Resolving {id}'.format(id=incident))
+            try:
+                self.resolve_open_incident(incident, from_email)
+            except:
+                logging.error(
+                    'Could not resolve incident {id}'.format(id=incident)
+                )
+
+    def resolve_open_incident(self, incident_id, from_email):
+        """Resolves an incident"""
+
+        payload = {
+            'incident': {
+                'type': 'incident_reference',
+                'status': 'resolved'
+            }
+        }
         r = self.pd_rest.put(
-            '/incidents',
-            incidents,
+            '/incidents/{id}'.format(id=incident_id),
+            payload,
             from_email
         )
         return r
@@ -215,7 +225,10 @@ class DeleteUser():
     def list_user_escalation_policies(self, user_id):
         """List all escalation policies user is on"""
 
-        r = self.pd_rest.get('/escalation_policies', {'user_ids[]': user_id})
+        r = self.pd_rest.get(
+            '/escalation_policies',
+            {'user_ids[]': user_id}
+        )
         return r['escalation_policies']
 
     def get_schedule(self, schedule_id):
@@ -398,7 +411,7 @@ def main(access_token, user_email, from_email):
         os.mkdir(os.path.join(os.getcwd(), './logs'))
     logging.basicConfig(filename='./logs/{timestamp}.log'.format(
         timestamp=datetime.now().isoformat()
-    ), level=logging.WARNING)
+    ), level=logging.INFO)
     logging.info('Start of main logic')
     # Declare cache variables
     schedule_cache = []
@@ -411,6 +424,7 @@ def main(access_token, user_email, from_email):
     logging.info('User ID: {id}'.format(id=user_id))
     # Check for open incidents user is currently in use for
     incidents = delete_user.list_open_incidents(user_id)
+    print json.dumps(incidents)
     if incidents['total'] > 0:
         incident_output = ""
         incident_ids = []
@@ -418,14 +432,15 @@ def main(access_token, user_email, from_email):
             incident_output = "{current}\n[#{number}]: {description}".format(
                 current=incident_output,
                 number=incident['incident_number'],
-                description=incident['description']
+                description=incident['description'].encode('utf-8')
             )
             incident_ids.append(incident['id'])
         # TODO: Refactor this into a function
         response = raw_input(
             'There are currently {total} open incidents that this user is in '
             'use for:{incidents}\n'
-            'Do you want to auto-resolve the incidents below? (y/n): '.format(
+            'Do you want to auto-resolve the {total} incidents above? (y/n): '
+            .format(
                 total=incidents['total'],
                 incidents=incident_output
             )
@@ -454,8 +469,7 @@ def main(access_token, user_email, from_email):
             if not from_email:
                 raise Exception('Must pass from_email to resolve incidents')
             logging.info('Resolving all open incidents...')
-            payload = delete_user.get_incident_resolution_payload(incident_ids)
-            delete_user.resolve_open_incidents(payload, from_email)
+            delete_user.resolve_incidents(incident_ids, from_email)
             logging.info('Successfully resolved all open incidents')
         else:
             logging.critical('Did not answer y or n')
