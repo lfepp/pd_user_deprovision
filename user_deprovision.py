@@ -173,6 +173,7 @@ class DeleteUser():
             # 'date_range': 'all',
             # 'urgencies[]': 'suppressed',
             # 'with_suppressed': True,
+            # 'service_ids[]': 'INSERT_ID',
         })
         return r
 
