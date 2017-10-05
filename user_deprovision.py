@@ -40,7 +40,6 @@ class PagerDutyREST():
         self.base_url = 'https://api.pagerduty.com'
         self.headers = {
             'Accept': 'application/vnd.pagerduty+json;version=2',
-            'Content-type': 'application/json',
             'Authorization': 'Token token={token}'.format(token=access_token)
         }
 
@@ -59,9 +58,6 @@ class PagerDutyREST():
             # Try/except for cases where getting a single resource
             try:
                 if r['more']:
-                    # FIXME: Remove when teams can have total in params
-                    if not resource:
-                        resource = endpoint[1:]
                     payload['offset'] = 100
                     output = r
                     while r['more']:
@@ -91,14 +87,15 @@ class PagerDutyREST():
             base_url=self.base_url,
             endpoint=endpoint
         )
-        headers = self.headers
+        headers = dict(self.headers)
+        headers['Content-Type'] = 'application/json'
         if from_header:
             headers['From'] = from_header
         if payload:
             r = requests.put(
                 url,
                 data=json.dumps(payload),
-                headers=self.headers
+                headers=headers
             )
         else:
             r = requests.put(url, headers=headers)
@@ -133,7 +130,8 @@ class PagerDutyREST():
             base_url=self.base_url,
             endpoint=endpoint
         )
-        headers = self.headers
+        headers = dict(self.headers)
+        headers['Content-Type'] = 'application/json'
         if from_header:
             headers['From'] = from_header
         r = requests.post(url, headers=headers, data=json.dumps(payload))
