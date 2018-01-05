@@ -697,7 +697,11 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--delete-yes-to-all', '-y',
-        help='Skip prompting for deletion of objects',
+        help='When removing a user results in an empty object, i.e. an '
+            'escalation policy with no rules, the script will prompt you as to '
+            'whether you want to remove the empty object. Enabling this flag '
+            'skips this prompting for deletion of objects and deletes all '
+            'empty objects automatically.',
         dest='prompt_del', action='store_false', default=True
     )
 
