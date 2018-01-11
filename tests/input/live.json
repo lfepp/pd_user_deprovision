@@ -1,0 +1,33 @@
+{
+    "users": [{
+        "name": "User McUserson",
+        "email": "a-user@no-domain.tld",
+        "type": "user"
+    }],
+    "schedules": [
+        {
+            "type": "schedule",
+            "name": "Sched that will be empty after removing user",
+            "schedule_layers": [{
+                "start": "2017-10-03T15:06:00-07",
+                "rotation_virtual_start": "2017-10-03T15:06:00-07",
+                "rotation_turn_length_seconds": 86400
+            }],
+            "time_zone": "America/Los_Angeles"
+        }
+    ],
+    "escalation_policies": [
+        {
+            "type": "escalation_policy",
+            "name": "EP: two level and will be empty after removing schedule and user",
+            "escalation_rules": [
+                {
+                    "escalation_delay_in_minutes": 5
+                },
+                {
+                    "escalation_delay_in_minutes": 1
+                }
+            ]
+        }
+    ]
+}

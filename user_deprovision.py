@@ -25,13 +25,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import requests
-import json
 import argparse
 from datetime import datetime
+import json
 import logging
 import os
-
+import requests
 
 class PagerDutyREST():
     """Class to handle all calls to the PagerDuty API"""
@@ -40,7 +39,6 @@ class PagerDutyREST():
         self.base_url = 'https://api.pagerduty.com'
         self.headers = {
             'Accept': 'application/vnd.pagerduty+json;version=2',
-            'Content-type': 'application/json',
             'Authorization': 'Token token={token}'.format(token=access_token)
         }
 
@@ -59,9 +57,6 @@ class PagerDutyREST():
             # Try/except for cases where getting a single resource
             try:
                 if r['more']:
-                    # FIXME: Remove when teams can have total in params
-                    if not resource:
-                        resource = endpoint[1:]
                     payload['offset'] = 100
                     output = r
                     while r['more']:
@@ -91,14 +86,15 @@ class PagerDutyREST():
             base_url=self.base_url,
             endpoint=endpoint
         )
-        headers = self.headers
+        headers = dict(self.headers)
+        headers['Content-Type'] = 'application/json'
         if from_header:
             headers['From'] = from_header
         if payload:
             r = requests.put(
                 url,
                 data=json.dumps(payload),
-                headers=self.headers
+                headers=headers
             )
         else:
             r = requests.put(url, headers=headers)
@@ -133,7 +129,8 @@ class PagerDutyREST():
             base_url=self.base_url,
             endpoint=endpoint
         )
-        headers = self.headers
+        headers = dict(self.headers)
+        headers['Content-Type'] = 'application/json'
         if from_header:
             headers['From'] = from_header
         r = requests.post(url, headers=headers, data=json.dumps(payload))
@@ -145,6 +142,20 @@ class PagerDutyREST():
                 \nError: {error}'.format(code=r.status_code, error=r.text)
             )
 
+def input_yn(message):
+    """Prompt for a yes or no
+
+    Summary: Prompt a y/n question
+    Attributes:
+        @param (prompt): question requiring y/n answer from user
+    Returns: Boolean value of the user's answer
+    """
+    response = raw_input(message+" (y/n): ").strip().lower()
+    valid_responses = ('n', 'y')
+    if response and response[0] in valid_responses:
+        return bool(valid_responses.index(response))
+    else:
+        return input_yn(message)
 
 class DeleteUser():
     """Class to handle all user deletion logic"""
@@ -322,9 +333,7 @@ class DeleteUser():
     def delete_schedule(self, schedule_id):
         """Deletes the schedule"""
 
-        r = self.pd_rest.delete(
-            '/schedules/{id}'.format(id=schedule_id)
-        )
+        r = self.pd_rest.delete('/schedules/{id}'.format(id=schedule_id))
         return r
 
     def create_schedule(self, schedule):
@@ -401,11 +410,15 @@ class DeleteUser():
         """Delete user from PagerDuty"""
 
         r = self.pd_rest.delete('/users/{id}'.format(id=user_id))
-        return r
+        return r == 204
 
-
-def main(access_token, user_email, from_email):
+def main(access_token, user_email, from_email, prompt_del=False,
+        prompt_res=False):
     """Handle command-line logic to delete user"""
+
+    if prompt_del and not input_yn("Proceed with user deletion?"):
+        return
+
 
     # Initialize logging
     if not os.path.isdir(os.path.join(os.getcwd(), './logs')):
@@ -425,7 +438,6 @@ def main(access_token, user_email, from_email):
     logging.info('User ID: {id}'.format(id=user_id))
     # Check for open incidents user is currently in use for
     incidents = delete_user.list_open_incidents(user_id)
-    print json.dumps(incidents)
     if incidents['total'] > 0:
         incident_output = ""
         incident_ids = []
@@ -436,17 +448,16 @@ def main(access_token, user_email, from_email):
                 description=incident['description'].encode('utf-8')
             )
             incident_ids.append(incident['id'])
-        # TODO: Refactor this into a function
-        response = raw_input(
-            'There are currently {total} open incidents that this user is in '
-            'use for:{incidents}\n'
+        response = not prompt_res or input_yn(
+            'There are currently {total} open incidents that this user is in '\
+            'use for:{incidents}\n'\
             'Do you want to auto-resolve the {total} incidents above? (y/n): '
             .format(
                 total=incidents['total'],
                 incidents=incident_output
             )
         )
-        if response.lower() in ['n', 'no']:
+        if response:
             logging.critical(
                 ('There are currently {total} open incidents that this user is'
                  ' in use for. Please resolve the following incidents and '
@@ -465,17 +476,15 @@ def main(access_token, user_email, from_email):
                     )
                  )
             )
-        elif response.lower() in ['y', 'yes']:
-            # TODO: Should prompt for from_email instead of throwing an error
+        else:
             if not from_email:
-                raise Exception('Must pass from_email to resolve incidents')
+                from_email = raw_input(
+                    "Please enter email address of the requesting agent: "
+                ).strip()
             logging.info('Resolving all open incidents...')
             delete_user.resolve_incidents(incident_ids, from_email)
             logging.info('Successfully resolved all open incidents')
-        else:
-            logging.critical('Did not answer y or n')
-            raise Exception('Did not answer y or n')
-    # Get a list of all esclation policies
+    # Get a list of all escalation policies
     escalation_policies = delete_user.list_user_escalation_policies(user_id)
     logging.info('GOT escalation policies')
     logging.debug('EPs: \n{eps}'.format(eps=json.dumps(escalation_policies)))
@@ -500,33 +509,36 @@ def main(access_token, user_email, from_email):
             x for j, x in enumerate(escalation_policies[i]['escalation_rules'])
             if not len(x['targets']) == 0
         ]
-        # Update the escalation policy if there are rules or delete the escalation policy  # NOQA
-        if len(escalation_policies[i]['escalation_rules']) != 0:
+        # Update the escalation policy. If it's empty, ask if the user wants to
+        # delete the escalation policy
+        if len(escalation_policies[i]['escalation_rules']) != 0 or (
+            prompt_del and not input_yn(
+                "Escalation policy (ID=%s, name=%s) will be empty. Delete it?"%(
+                    escalation_policies[i]['id'],
+                    escalation_policies[i]['name']
+                )
+            )):
+            # Update the schedule.
             delete_user.update_escalation_policy(
                 escalation_policies[i]['id'],
                 escalation_policies[i]
             )
+        # Attempt to delete the empty EP otherwise:
         else:
             try:
-                delete_user.delete_escalation_policy(
-                    ep['id']
-                )
+                delete_user.delete_escalation_policy(ep['id'])
             except Exception:
-                logging.warning('The escalation policy {name} no longer has any \
-                on-call engineers or schedules but is still attached to \
-                services in your account.'.format(
-                    name=escalation_policies[i]['name']
-                ))
+                logging.warning('Could not delete escalation policy %s. It no '
+                    'longer has any on-call engineers or schedules but may '
+                    'still be in use by services in your account.', 
+                    escalation_policies[i]['name'])
+
     logging.info('Finished removing from escalation policies')
-    logging.debug('EP cache: \n{cache}'.format(cache=json.dumps(
-        escalation_policy_cache
-    )))
+    logging.debug('EP cache: \n%s', json.dumps(escalation_policy_cache))
     # Get a list of all schedules
     schedules = delete_user.list_schedules()
-    logging.info('GOT schedules')
-    logging.debug('Schedules: \n{schedules}'.format(schedules=json.dumps(
-        schedules
-    )))
+    logging.debug('Schedules: \n%s', json.dumps(schedules))
+
     for sched in schedules:
         # Get the specific schedule
         schedule = delete_user.get_schedule(sched['id'])
@@ -559,11 +571,14 @@ def main(access_token, user_email, from_email):
             # Reverse the schdule layers
             schedule['schedule_layers'] = schedule['schedule_layers'][::-1]
             del schedule['users']
-            if len(schedule['schedule_layers']) > 0:
-                delete_user.update_schedule(schedule['id'], schedule)
             # If deleting, remove the schedule from any escalation policies
-            elif len(schedule['escalation_policies']) > 0:
+            if len(schedule['schedule_layers']) == 0 and (prompt_del and
+                input_yn(
+                    ("Schedule (ID=%s, name=%s) will be empty after removing " \
+                     "user. Delete it?")%(schedule['id'], schedule['name'])
+                )):
                 for ep in schedule['escalation_policies']:
+                    # Remove schedule from escalation policies...
                     escalation_policy = delete_user.get_escalation_policy(
                         ep['id']
                     )
@@ -583,13 +598,21 @@ def main(access_token, user_email, from_email):
                     ):
                         if len(rule['targets']) == 0:
                             del escalation_policy['escalation_rules'][i]
+
                     # Update the escalation policy if there are rules or delete the escalation policy  # NOQA
-                    if len(escalation_policy['escalation_rules']) > 0:
+                    if len(escalation_policy['escalation_rules']) > 0 :
                         delete_user.update_escalation_policy(
                             escalation_policy['id'],
                             escalation_policy
                         )
-                    else:
+                    elif not prompt_del or input_yn((
+                            "Escalation policy (ID=%s, name=%s) will be empty" \
+                            "after removing the schedule to be deleted. " \
+                            "Delete the escalation policy also?")%(
+                                escalation_policy['id'],
+                                escalation_policy['name']
+                            )
+                        ):
                         try:
                             delete_user.delete_escalation_policy(
                                 escalation_policy['id']
@@ -599,9 +622,11 @@ def main(access_token, user_email, from_email):
                             longer has any on-call engineers or schedules but \
                             is still attached to services in your account.\
                             '.format(name=escalation_policy['name']))
-            else:
-                # If no layers and no escalation policies, remove schedule
                 delete_user.delete_schedule(schedule['id'])
+            else: 
+                # Save updated schedule with user removed
+                delete_user.update_schedule(schedule['id'], schedule)
+
     logging.info('Finished removing from schedules')
     logging.debug('Schedule cache: {cache}'.format(cache=json.dumps(
         schedule_cache
@@ -619,7 +644,14 @@ def main(access_token, user_email, from_email):
     logging.info('Finished removing from teams')
     logging.debug('Team cache: {cache}'.format(cache=json.dumps(team_cache)))
     # Delete user
-    delete_user.delete_user(user_id)
+    if delete_user.delete_user(user_id):
+        print 'User {email} has been Successfully removed!'.format(
+            email=user_email
+        )
+    else:
+        print 'User {email} not removed; aborted, or API error.'.format(
+            email=user_email
+        )
     print 'Schedules affected:\n{cache}'.format(cache=json.dumps(
         schedule_cache
     ))
@@ -636,9 +668,7 @@ def main(access_token, user_email, from_email):
     logging.info('Teams affected:\n{cache}'.format(cache=json.dumps(
         team_cache
     )))
-    print 'User {email} has been Successfully removed!'.format(
-        email=user_email
-    )
+    
     logging.info('End of main logic')
 
 if __name__ == '__main__':
@@ -660,5 +690,21 @@ if __name__ == '__main__':
         help='Email address of the user requesting deletion',
         dest='from_email'
     )
+    parser.add_argument(
+        '--auto-resolve-incidents', '-r',
+        help='Automatically resolve incidents assigned to the user.',
+        dest='prompt_res', action='store_false', default=True
+    )
+    parser.add_argument(
+        '--delete-yes-to-all', '-y',
+        help='When removing a user results in an empty object, i.e. an '
+            'escalation policy with no rules, the script will prompt you as to '
+            'whether you want to remove the empty object. Enabling this flag '
+            'skips this prompting for deletion of objects and deletes all '
+            'empty objects automatically.',
+        dest='prompt_del', action='store_false', default=True
+    )
+
     args = parser.parse_args()
-    main(args.access_token, args.user_email, args.from_email)
+    main(args.access_token, args.user_email, args.from_email, 
+        prompt_del=args.prompt_del, prompt_res=args.prompt_res)
